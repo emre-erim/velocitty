@@ -1,3 +1,19 @@
+velocitty (1.0.3) adrien; urgency=medium
+
+  [ Michael Webster ]
+  * window.py: Update the internal window title when the header title changes.
+  * application: Add required -e/-T options, fix help program name
+  * window: Escape markup in tab tooltips
+  * tab: Don't record and retype the running command of a saved tab
+  * window.py: Don't make tabs focusable.
+
+  [ Clement Lefebvre ]
+  * shell: Kill the shell and processes when closing a tab
+  * tab: Add a confirmation dialog when a process is running
+  * l10n: Update POT
+
+ -- Clement Lefebvre <root@linuxmint.com>  Mon, 12 Oct 2026 11:06:38 +0100
+
 velocitty (1.0.2) adrien; urgency=medium
 
   [ Michael Webster ]
