@@ -218,6 +218,7 @@ class TermWindow(Adw.ApplicationWindow):
         tab = page.get_child()
         if isinstance(tab, TermTab) and not self.closing:
             self.record(tab)
+            tab.hangup()
         return False   # the tab is closed as usual
 
     def save_tab(self, tab):
@@ -551,6 +552,8 @@ class TermWindow(Adw.ApplicationWindow):
         if self.force_close or not busy:
             self.closing = True
             self.record_tabs()
+            for tab in self.tabs():
+                tab.hangup()
             self.app.custom_tabs.disconnect(self.custom_tabs_handler)
             return False
 

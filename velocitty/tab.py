@@ -1,5 +1,6 @@
 import os
 import shlex
+import signal
 import socket
 
 import gi
@@ -74,7 +75,7 @@ class TermTab(Gtk.Overlay):
         self.search_bar.connect("closed", self.on_search_closed)
         self.content.append(self.search_bar)
 
-        self.terminal.connect("child-exited", lambda *_: self.window.close_tab(self))
+        self.terminal.connect("child-exited", self.on_child_exited)
         self.terminal.connect("notify::window-title", lambda *_: self.update_title())
         self.terminal.connect("termprop-changed::vte.shell.precmd", self.on_precmd)
 
@@ -253,6 +254,40 @@ class TermTab(Gtk.Overlay):
         return True
 
     # -- session detection -------------------------------------------------
+
+    def on_child_exited(self, terminal, status):
+        """This is called when the shell exited by itself, so its PID is already dead."""
+        self.shell_pid = None
+        self.window.close_tab(self)
+
+    def hangup(self):
+        """This is called when we manually close a tab or a window."""
+        pty = self.terminal.get_pty()
+        if pty is not None:
+            # Kill whatever is running in the shell
+            try:
+                os.killpg(os.tcgetpgrp(pty.get_fd()), signal.SIGHUP)
+            except OSError:
+                pass
+        if self.shell_pid:
+            # Kill the shell itself
+            try:
+                os.kill(self.shell_pid, signal.SIGHUP)
+                handle = os.pidfd_open(self.shell_pid)
+                # Give the shell some time to save its history and all..
+                GLib.timeout_add(500, self.force_quit, handle)
+            except OSError:
+                pass   # it is already gone
+            self.shell_pid = None
+
+    def force_quit(self, handle):
+        """If the shell is still there, kill it for good."""
+        try:
+            signal.pidfd_send_signal(handle, signal.SIGKILL)
+        except OSError:
+            pass
+        os.close(handle)
+        return GLib.SOURCE_REMOVE
 
     def on_spawned(self, terminal, pid, error):
         self.shell_pid = pid
