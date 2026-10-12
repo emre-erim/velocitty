@@ -44,6 +44,7 @@ class TermTab(Gtk.Overlay):
         self.orphan_polls = 0
         restore = restore or {}
         self.startup = bool(restore.get("startup"))   # opens when the terminal launches
+        self.shell_exited = False   # the shell is gone: the tab closes without asking
         self.entry = None   # the saved copy of this tab, if it has one
         self.custom_title = restore.get("title") or None   # a title the user chose
         self.custom_color = restore.get("color") or None   # a custom color the user chose, by name
@@ -258,6 +259,7 @@ class TermTab(Gtk.Overlay):
     def on_child_exited(self, terminal, status):
         """This is called when the shell exited by itself, so its PID is already dead."""
         self.shell_pid = None
+        self.shell_exited = True
         self.window.close_tab(self)
 
     def hangup(self):

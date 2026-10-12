@@ -216,10 +216,45 @@ class TermWindow(Adw.ApplicationWindow):
 
     def on_close_page(self, view, page):
         tab = page.get_child()
-        if isinstance(tab, TermTab) and not self.closing:
+        if not isinstance(tab, TermTab) or self.closing:
+            return False
+        if tab.kind != "idle" and not tab.shell_exited:
+            self.confirm_close_tab(page, tab)
+            return True   # the tab is closed, or not, when the question is answered
+        self.record(tab)
+        tab.hangup()
+        return False   # the tab is closed as usual
+
+    def confirm_close_tab(self, page, tab):
+        dialog = self.build_close_dialog(_("Close Tab?"), [tab])
+        dialog.connect("response", self.on_close_tab_response, page, tab)
+        dialog.present(self)
+
+    def on_close_tab_response(self, dialog, response, page, tab):
+        close = response == "close"
+        if close:
             self.record(tab)
             tab.hangup()
-        return False   # the tab is closed as usual
+        else:
+            tab.closing = False
+        self.tab_view.close_page_finish(page, close)
+
+    def build_close_dialog(self, heading, busy):
+        dialog = Adw.AlertDialog(heading=heading, body=_("Some processes are still running."))
+        dialog.add_response("cancel", _("_Cancel"))
+        dialog.add_response("close", _("_Close"))
+        dialog.set_response_appearance("close", Adw.ResponseAppearance.DESTRUCTIVE)
+        # Escape and Enter cancel: closing is the one that must be asked for
+        dialog.set_close_response("cancel")
+        dialog.set_default_response("cancel")
+        group = Adw.PreferencesGroup()
+        group.add_css_class("close-list")
+        for tab in busy:
+            row = Adw.ActionRow(title=GLib.markup_escape_text(tab.command_line or tab.title))
+            row.add_css_class("close-" + (tab.style_class() or tab.kind))
+            group.add(row)
+        dialog.set_extra_child(group)
+        return dialog
 
     def save_tab(self, tab):
         tab.entry = self.app.custom_tabs.save_open(tab.entry, tab.snapshot())
@@ -557,20 +592,7 @@ class TermWindow(Adw.ApplicationWindow):
             self.app.custom_tabs.disconnect(self.custom_tabs_handler)
             return False
 
-        dialog = Adw.AlertDialog(heading=_("Close Window?"), body=_("Some processes are still running."))
-        dialog.add_response("cancel", _("_Cancel"))
-        dialog.add_response("close", _("_Close"))
-        dialog.set_response_appearance("close", Adw.ResponseAppearance.DESTRUCTIVE)
-        # Escape and Enter cancel: closing is the one that must be asked for
-        dialog.set_close_response("cancel")
-        dialog.set_default_response("cancel")
-        group = Adw.PreferencesGroup()
-        group.add_css_class("close-list")
-        for tab in busy:
-            row = Adw.ActionRow(title=GLib.markup_escape_text(tab.command_line or tab.title))
-            row.add_css_class("close-" + (tab.style_class() or tab.kind))
-            group.add(row)
-        dialog.set_extra_child(group)
+        dialog = self.build_close_dialog(_("Close Window?"), busy)
         dialog.connect("response", self.on_close_response)
         dialog.present(self)
         return True
