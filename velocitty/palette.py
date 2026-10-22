@@ -63,12 +63,21 @@ def _read(path):
     that are used for both."""
     keyfile = GLib.KeyFile()
     keyfile.load_from_file(path, GLib.KeyFileFlags.NONE)
-    palette = {}
-    for scheme in ("Light", "Dark"):
-        section = scheme if keyfile.has_group(scheme) else "Palette"
-        values = {key: keyfile.get_string(section, key) for key in keyfile.get_keys(section)[0]}
-        palette[scheme] = _with_text_colors(values)
-    return palette
+
+    def section(name):
+        return {key: keyfile.get_string(name, key) for key in keyfile.get_keys(name)[0]}
+
+    if keyfile.has_group("Light") or keyfile.has_group("Dark"):
+        raw = {scheme: section(scheme if keyfile.has_group(scheme) else "Palette") for scheme in ("Light", "Dark")}
+    else:
+        # A palette with one set of colors is made for its own style. The other style gets
+        # a version of it made here, so that the light and dark buttons always do something.
+        values = section("Palette")
+        if _is_dark(_parse(values["Background"])):
+            raw = {"Dark": values, "Light": _derive(values, light=True)}
+        else:
+            raw = {"Light": values, "Dark": _derive(values, light=False)}
+    return {scheme: _with_text_colors(raw[scheme]) for scheme in ("Light", "Dark")}
 
 
 def display_name(name):
@@ -106,6 +115,46 @@ def _contrast(color, other):
     """The contrast ratio between two colors, from 1 to 21."""
     lighter, darker = sorted((_luminance(color), _luminance(other)), reverse=True)
     return (lighter + 0.05) / (darker + 0.05)
+
+
+def _hex(color):
+    return "#%02X%02X%02X" % tuple(round(channel * 255) for channel in color)
+
+
+def _mix(color, other, amount):
+    """color moved toward other, by amount from 0 to 1. Both are "#rrggbb"."""
+    a, b = _parse(color), _parse(other)
+    return _hex(tuple(x + (y - x) * amount for x, y in zip(a, b)))
+
+
+def _push(color, background, ink, contrast):
+    """color moved toward ink (black or white) until it reads on background."""
+    amount, result = 0.0, color
+    while _contrast(_parse(result), _parse(background)) < contrast and amount < 1:
+        amount = min(1.0, amount + 0.05)
+        result = _mix(color, ink, amount)
+    return result
+
+
+# The ANSI colors that are used for text: they must read on the background. Black, white and
+# their bright versions keep their meaning, as in other light and dark themes.
+TEXT_COLORS = [2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15]
+
+
+def _derive(values, light):
+    """The light version of a dark palette, or the dark version of a light one: a tint of its
+    background, its text colors made dark (or light) enough to be read there."""
+    paper, ink = ("#FFFFFF", "#000000") if light else ("#000000", "#FFFFFF")
+    v = dict(values)
+    background = _mix(values["Background"], paper, 0.92 if light else 0.85)
+    foreground = _push(_mix(values["Background"], ink, 0.35), background, ink, 7.0)
+    v["Background"], v["Foreground"] = background, foreground
+    v["Titlebar"] = _mix(background, foreground, 0.08)
+    for index in TEXT_COLORS:
+        key = "Color%d" % index
+        v[key] = _push(values[key], background, ink, 3.0)
+    v["Color9"] = _push(values["Color9"], background, ink, 2.5)
+    return v
 
 
 def _is_dark(color):

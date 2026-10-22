@@ -1,5 +1,39 @@
 [Palette]
-Name=GitHub Dark Default
+Name=GitHub
+
+[Light]
+Foreground=#1F2328
+Background=#FFFFFF
+Titlebar=#EDEDEE
+Color1=#24292F
+Color2=#CF222E
+Color3=#116329
+Color4=#4D2D00
+Color5=#0969DA
+Color6=#8250DF
+Color7=#1B7C83
+Color8=#6E7781
+Color9=#57606A
+Color10=#A40E26
+Color11=#1A7F37
+Color12=#633C01
+Color13=#218BFF
+Color14=#A475F9
+Color15=#3192AA
+Color16=#8C959F
+Admin=#CF222E
+Remote=#0969DA
+Blue=#0969DA
+Turquoise=#1B7C83
+Teal=#167056
+Green=#116329
+Red=#CF222E
+Purple=#8250DF
+Pink=#A475F9
+Orange=#8E2817
+Yellow=#4D2D00
+
+[Dark]
 Foreground=#E6EDF3
 Background=#0D1117
 Titlebar=#1E2329
@@ -31,4 +65,5 @@ Pink=#D2A8FF
 Orange=#E88A4A
 Yellow=#D29922
 
-# Converted from the Ghostty theme "GitHub Dark Default" (https://github.com/mbadolato/iTerm2-Color-Schemes)
+# Converted from the Ghostty themes "GitHub Dark Default" (dark) and "GitHub Light Default" (light)
+# https://github.com/mbadolato/iTerm2-Color-Schemes

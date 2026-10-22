@@ -1,5 +1,39 @@
 [Palette]
 Name=Night Owl
+
+[Light]
+Foreground=#403F53
+Background=#FFFFFF
+Titlebar=#F0F0F1
+Color1=#011627
+Color2=#D3423E
+Color3=#2AA298
+Color4=#DAAA01
+Color5=#4876D6
+Color6=#403F53
+Color7=#08916A
+Color8=#7A8181
+Color9=#7A8181
+Color10=#F76E6E
+Color11=#49D0C5
+Color12=#DAC26B
+Color13=#5CA7E4
+Color14=#697098
+Color15=#00C990
+Color16=#989FB1
+Admin=#D3423E
+Remote=#4876D6
+Blue=#4876D6
+Turquoise=#08916A
+Teal=#199A81
+Green=#2AA298
+Red=#D3423E
+Purple=#403F53
+Pink=#697098
+Orange=#D67620
+Yellow=#DAAA01
+
+[Dark]
 Foreground=#D6DEEB
 Background=#011627
 Titlebar=#122637
@@ -31,4 +65,5 @@ Pink=#C792EA
 Orange=#CE975C
 Yellow=#ADDB67
 
-# Converted from the Ghostty theme "Night Owl" (https://github.com/mbadolato/iTerm2-Color-Schemes)
+# Converted from the Ghostty themes "Night Owl" (dark) and "Night Owlish Light" (light)
+# https://github.com/mbadolato/iTerm2-Color-Schemes

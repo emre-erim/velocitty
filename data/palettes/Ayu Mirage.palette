@@ -1,5 +1,39 @@
 [Palette]
-Name=Ayu Mirage
+Name=Ayu
+
+[Light]
+Foreground=#5C6166
+Background=#F8F9FA
+Titlebar=#ECEDEE
+Color1=#000000
+Color2=#EA6C6D
+Color3=#6CBF43
+Color4=#ECA944
+Color5=#3199E1
+Color6=#9E75C7
+Color7=#46BA94
+Color8=#BABABA
+Color9=#686868
+Color10=#F07171
+Color11=#86B300
+Color12=#F2AE49
+Color13=#399EE6
+Color14=#A37ACC
+Color15=#4CBF99
+Color16=#D1D1D1
+Admin=#EA6C6D
+Remote=#3199E1
+Blue=#3199E1
+Turquoise=#46BA94
+Teal=#59BC6C
+Green=#6CBF43
+Red=#EA6C6D
+Purple=#9E75C7
+Pink=#A37ACC
+Orange=#EB8A58
+Yellow=#ECA944
+
+[Dark]
 Foreground=#CCCAC2
 Background=#1F2430
 Titlebar=#2D313C
@@ -31,4 +65,5 @@ Pink=#DFBFFF
 Orange=#F4A771
 Yellow=#FACC6E
 
-# Converted from the Ghostty theme "Ayu Mirage" (https://github.com/mbadolato/iTerm2-Color-Schemes)
+# Converted from the Ghostty themes "Ayu Mirage" (dark) and "Ayu Light" (light)
+# https://github.com/mbadolato/iTerm2-Color-Schemes

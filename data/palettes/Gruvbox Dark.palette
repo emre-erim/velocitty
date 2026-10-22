@@ -1,5 +1,39 @@
 [Palette]
-Name=Gruvbox Dark
+Name=Gruvbox
+
+[Light]
+Foreground=#3C3836
+Background=#FBF1C7
+Titlebar=#ECE2BB
+Color1=#FBF1C7
+Color2=#CC241D
+Color3=#98971A
+Color4=#D79921
+Color5=#458588
+Color6=#B16286
+Color7=#689D6A
+Color8=#7C6F64
+Color9=#928374
+Color10=#9D0006
+Color11=#79740E
+Color12=#B57614
+Color13=#076678
+Color14=#8F3F71
+Color15=#427B58
+Color16=#3C3836
+Admin=#CC241D
+Remote=#458588
+Blue=#458588
+Turquoise=#689D6A
+Teal=#809A42
+Green=#98971A
+Red=#CC241D
+Purple=#B16286
+Pink=#8F3F71
+Orange=#D25E1F
+Yellow=#D79921
+
+[Dark]
 Foreground=#EBDBB2
 Background=#282828
 Titlebar=#383633
@@ -31,4 +65,5 @@ Pink=#D3869B
 Orange=#D25E1F
 Yellow=#D79921
 
-# Converted from the Ghostty theme "Gruvbox Dark" (https://github.com/mbadolato/iTerm2-Color-Schemes)
+# Converted from the Ghostty themes "Gruvbox Dark" (dark) and "Gruvbox Light" (light)
+# https://github.com/mbadolato/iTerm2-Color-Schemes

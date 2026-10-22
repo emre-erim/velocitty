@@ -1,5 +1,39 @@
 [Palette]
 Name=Kanagawa Wave
+
+[Light]
+Foreground=#545464
+Background=#F2ECBC
+Titlebar=#E5E0B5
+Color1=#1F1F28
+Color2=#C84053
+Color3=#6F894E
+Color4=#77713F
+Color5=#4D699B
+Color6=#B35B79
+Color7=#597B75
+Color8=#545464
+Color9=#8A8980
+Color10=#D7474B
+Color11=#6E915F
+Color12=#836F4A
+Color13=#6693BF
+Color14=#624C83
+Color15=#5E857A
+Color16=#43436C
+Admin=#C84053
+Remote=#4D699B
+Blue=#4D699B
+Turquoise=#597B75
+Teal=#648262
+Green=#6F894E
+Red=#C84053
+Purple=#B35B79
+Pink=#624C83
+Orange=#A05849
+Yellow=#77713F
+
+[Dark]
 Foreground=#DCD7BA
 Background=#1F1F28
 Titlebar=#2E2E34
@@ -31,4 +65,5 @@ Pink=#938AA9
 Orange=#C27258
 Yellow=#C0A36E
 
-# Converted from the Ghostty theme "Kanagawa Wave" (https://github.com/mbadolato/iTerm2-Color-Schemes)
+# Converted from the Ghostty themes "Kanagawa Wave" (dark) and "Kanagawa Lotus" (light)
+# https://github.com/mbadolato/iTerm2-Color-Schemes

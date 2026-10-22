@@ -1,5 +1,39 @@
 [Palette]
 Name=Rose Pine
+
+[Light]
+Foreground=#575279
+Background=#FAF4ED
+Titlebar=#EDE7E4
+Color1=#F2E9E1
+Color2=#B4637A
+Color3=#286983
+Color4=#EA9D34
+Color5=#56949F
+Color6=#907AA9
+Color7=#D7827E
+Color8=#575279
+Color9=#9893A5
+Color10=#B4637A
+Color11=#286983
+Color12=#EA9D34
+Color13=#56949F
+Color14=#907AA9
+Color15=#D7827E
+Color16=#575279
+Admin=#B4637A
+Remote=#56949F
+Blue=#56949F
+Turquoise=#D7827E
+Teal=#807680
+Green=#286983
+Red=#B4637A
+Purple=#907AA9
+Pink=#907AA9
+Orange=#CF8057
+Yellow=#EA9D34
+
+[Dark]
 Foreground=#E0DEF4
 Background=#191724
 Titlebar=#292735
@@ -31,4 +65,5 @@ Pink=#C4A7E7
 Orange=#F09884
 Yellow=#F6C177
 
-# Converted from the Ghostty theme "Rose Pine" (https://github.com/mbadolato/iTerm2-Color-Schemes)
+# Converted from the Ghostty themes "Rose Pine" (dark) and "Rose Pine Dawn" (light)
+# https://github.com/mbadolato/iTerm2-Color-Schemes

@@ -1,5 +1,39 @@
 [Palette]
-Name=Everforest Dark Med
+Name=Everforest
+
+[Light]
+Foreground=#5C6A72
+Background=#EFEBD4
+Titlebar=#E3E1CC
+Color1=#7A8478
+Color2=#E67E80
+Color3=#9AB373
+Color4=#C1A266
+Color5=#7FBBB3
+Color6=#D699B6
+Color7=#83C092
+Color8=#B2AF9F
+Color9=#A6B0A0
+Color10=#F85552
+Color11=#8DA101
+Color12=#DFA000
+Color13=#3A94C5
+Color14=#DF69BA
+Color15=#35A77C
+Color16=#FFFBEF
+Admin=#E67E80
+Remote=#7FBBB3
+Blue=#7FBBB3
+Turquoise=#83C092
+Teal=#8EBA82
+Green=#9AB373
+Red=#E67E80
+Purple=#D699B6
+Pink=#DF69BA
+Orange=#D49073
+Yellow=#C1A266
+
+[Dark]
 Foreground=#D3C6AA
 Background=#232A2E
 Titlebar=#313638
@@ -31,4 +65,5 @@ Pink=#DF69BA
 Orange=#E09D80
 Yellow=#DBBC7F
 
-# Converted from the Ghostty theme "Everforest Dark Med" (https://github.com/mbadolato/iTerm2-Color-Schemes)
+# Converted from the Ghostty themes "Everforest Dark Med" (dark) and "Everforest Light Med" (light)
+# https://github.com/mbadolato/iTerm2-Color-Schemes

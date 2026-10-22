@@ -1,5 +1,39 @@
 [Palette]
 Name=TokyoNight
+
+[Light]
+Foreground=#3760BF
+Background=#E1E2E7
+Titlebar=#D3D8E4
+Color1=#E9E9ED
+Color2=#F52A65
+Color3=#587539
+Color4=#8C6C3E
+Color5=#2E7DE9
+Color6=#9854F1
+Color7=#007197
+Color8=#6172B0
+Color9=#A1A6C5
+Color10=#F52A65
+Color11=#587539
+Color12=#8C6C3E
+Color13=#2E7DE9
+Color14=#9854F1
+Color15=#007197
+Color16=#3760BF
+Admin=#F52A65
+Remote=#2E7DE9
+Blue=#2E7DE9
+Turquoise=#007197
+Teal=#2C7368
+Green=#587539
+Red=#F52A65
+Purple=#9854F1
+Pink=#9854F1
+Orange=#C04B52
+Yellow=#8C6C3E
+
+[Dark]
 Foreground=#C0CAF5
 Background=#1A1B26
 Titlebar=#272937
@@ -31,4 +65,5 @@ Pink=#BB9AF7
 Orange=#EC927B
 Yellow=#E0AF68
 
-# Converted from the Ghostty theme "TokyoNight" (https://github.com/mbadolato/iTerm2-Color-Schemes)
+# Converted from the Ghostty themes "TokyoNight" (dark) and "TokyoNight Day" (light)
+# https://github.com/mbadolato/iTerm2-Color-Schemes

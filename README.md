@@ -37,6 +37,16 @@ terminal opens in the folder of the one it was split from.
 12-bit Rainbow, Dracula, Gruvbox Dark, TokyoNight, Atom One Dark, Rose Pine, Kanagawa Wave,
 Everforest Dark Med, Night Owl, GitHub Dark Default and Ayu Mirage.
 
+### Light and dark that always work
+
+The light and dark buttons in the main menu used to change nothing with most palettes, because only
+a few of them had a light and a dark version. Now every palette has both:
+
+- Gruvbox, TokyoNight, Atom One, Rose Pine, Kanagawa Wave, Everforest, Night Owl, GitHub and Ayu carry
+  their official light themes (Gruvbox Light, TokyoNight Day, Rose Pine Dawn, Kanagawa Lotus...).
+- Every other palette gets its other version made on the fly: a tint of its background, with its
+  colors darkened (or lightened) until they can be read on it.
+
 ### F10 belongs to the terminal
 
 The main menu moved from `F10` to `Ctrl+Shift+M`, so `F10` reaches Midnight Commander and friends again.
