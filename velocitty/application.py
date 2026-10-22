@@ -256,9 +256,25 @@ class TermApp(Adw.Application):
         return False
 
     def show_about(self):
+        # Velocitty is the work of the Linux Mint team: this edition only adds to it
         about = Adw.AboutDialog(application_name="Velocitty", application_icon="velocitty",
-                                version=VERSION,
-                                website="https://github.com/xapp-project/velocitty")
+                                version=VERSION + " — Emre Edition",
+                                developer_name="Linux Mint · Emre Edition by Emre",
+                                comments="Terminal emulator for Linux desktops.\n\n"
+                                         "Emre Edition is an experimental, personal, vibe-coded fork: "
+                                         "split terminals, Ghostty themes, light and dark for every "
+                                         "palette and an SSH address book.",
+                                website="https://github.com/emre-erim/velocitty",
+                                issue_url="https://github.com/emre-erim/velocitty/issues",
+                                license_type=Gtk.License.GPL_3_0)
+        about.add_link("Original Velocitty (Linux Mint)", "https://github.com/xapp-project/velocitty")
+        about.add_link("Emre Edition on GitHub", "https://github.com/emre-erim/velocitty")
+        about.add_credit_section("Velocitty", ["The Linux Mint team https://linuxmint.com"])
+        about.add_credit_section("Emre Edition", ["Emre https://github.com/emre-erim"])
+        about.add_acknowledgement_section("Inspired by", ["Terminator", "Ghostty https://ghostty.org",
+                                                         "deepin-terminal"])
+        about.add_acknowledgement_section("Themes", [
+            "iTerm2-Color-Schemes https://github.com/mbadolato/iTerm2-Color-Schemes"])
         about.present(self.get_active_window())
 
 

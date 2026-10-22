@@ -266,7 +266,7 @@ window.terminal .ssh-list row.ssh-host:hover, window.terminal .ssh-list row.ssh-
 window.terminal .ssh-list row.ssh-quick { background-color: alpha($tf, 0.07); margin-top: 4px; }
 window.terminal .ssh-list .ssh-group { opacity: 0.6; }
 window.terminal .ssh-host-name { font-weight: 600; }
-window.terminal .ssh-connect-hint { opacity: 0.75; margin-end: 2px; }
+window.terminal .ssh-connect-hint { opacity: 0.75; margin-right: 2px; }
 window.terminal .ssh-panel statuspage { background-color: transparent; color: $tf; }
 row.drop { box-shadow: 0 -2px 0 0 @accent_bg_color; }
 """)
