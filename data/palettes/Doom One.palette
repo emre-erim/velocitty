@@ -1,0 +1,35 @@
+[Palette]
+Name=Doom One
+Foreground=#BBC2CF
+Background=#282C34
+Titlebar=#343840
+Color1=#000000
+Color2=#FF6C6B
+Color3=#98BE65
+Color4=#ECBE7B
+Color5=#A9A1E1
+Color6=#C678DD
+Color7=#51AFEF
+Color8=#BBC2CF
+Color9=#595959
+Color10=#FF6655
+Color11=#99BB66
+Color12=#ECBE7B
+Color13=#A9A1E1
+Color14=#C678DD
+Color15=#51AFEF
+Color16=#BFBFBF
+Admin=#FF6C6B
+Remote=#A9A1E1
+Blue=#A9A1E1
+Turquoise=#51AFEF
+Teal=#74B6AA
+Green=#98BE65
+Red=#FF6C6B
+Purple=#C678DD
+Pink=#C678DD
+Orange=#F69573
+Yellow=#ECBE7B
+
+# Converted from the Ghostty themes "Doom One"
+# https://github.com/mbadolato/iTerm2-Color-Schemes

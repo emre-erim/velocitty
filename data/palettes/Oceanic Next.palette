@@ -1,0 +1,35 @@
+[Palette]
+Name=Oceanic Next
+Foreground=#C0C5CE
+Background=#162C35
+Titlebar=#243841
+Color1=#162C35
+Color2=#EC5F67
+Color3=#99C794
+Color4=#FAC863
+Color5=#6699CC
+Color6=#C594C5
+Color7=#5FB3B3
+Color8=#FFFFFF
+Color9=#65737E
+Color10=#EC5F67
+Color11=#99C794
+Color12=#FAC863
+Color13=#6699CC
+Color14=#C594C5
+Color15=#5FB3B3
+Color16=#FFFFFF
+Admin=#EC5F67
+Remote=#6699CC
+Blue=#6699CC
+Turquoise=#5FB3B3
+Teal=#7CBDA4
+Green=#99C794
+Red=#EC5F67
+Purple=#C594C5
+Pink=#C594C5
+Orange=#F39465
+Yellow=#FAC863
+
+# Converted from the Ghostty themes "Oceanic Next"
+# https://github.com/mbadolato/iTerm2-Color-Schemes

@@ -1,0 +1,35 @@
+[Palette]
+Name=Material Ocean
+Foreground=#8F93A2
+Background=#0F111A
+Titlebar=#191B25
+Color1=#546E7A
+Color2=#FF5370
+Color3=#C3E88D
+Color4=#FFCB6B
+Color5=#82AAFF
+Color6=#C792EA
+Color7=#89DDFF
+Color8=#FFFFFF
+Color9=#546E7A
+Color10=#FF5370
+Color11=#C3E88D
+Color12=#FFCB6B
+Color13=#82AAFF
+Color14=#C792EA
+Color15=#89DDFF
+Color16=#FFFFFF
+Admin=#FF5370
+Remote=#82AAFF
+Blue=#82AAFF
+Turquoise=#89DDFF
+Teal=#A6E2C6
+Green=#C3E88D
+Red=#FF5370
+Purple=#C792EA
+Pink=#C792EA
+Orange=#FF8F6E
+Yellow=#FFCB6B
+
+# Converted from the Ghostty themes "Material Ocean"
+# https://github.com/mbadolato/iTerm2-Color-Schemes

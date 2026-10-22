@@ -1,0 +1,35 @@
+[Palette]
+Name=Snazzy
+Foreground=#EBECE6
+Background=#1E1F29
+Titlebar=#2E2F38
+Color1=#000000
+Color2=#FC4346
+Color3=#50FB7C
+Color4=#F0FB8C
+Color5=#49BAFF
+Color6=#FC4CB4
+Color7=#8BE9FE
+Color8=#EDEDEC
+Color9=#555555
+Color10=#FC4346
+Color11=#50FB7C
+Color12=#F0FB8C
+Color13=#49BAFF
+Color14=#FC4CB4
+Color15=#8BE9FE
+Color16=#EDEDEC
+Admin=#FC4346
+Remote=#49BAFF
+Blue=#49BAFF
+Turquoise=#8BE9FE
+Teal=#6EF2BD
+Green=#50FB7C
+Red=#FC4346
+Purple=#FC4CB4
+Pink=#FC4CB4
+Orange=#F69F69
+Yellow=#F0FB8C
+
+# Converted from the Ghostty themes "Snazzy"
+# https://github.com/mbadolato/iTerm2-Color-Schemes

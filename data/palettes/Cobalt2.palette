@@ -1,0 +1,35 @@
+[Palette]
+Name=Cobalt2
+Foreground=#FFFFFF
+Background=#132738
+Titlebar=#263848
+Color1=#000000
+Color2=#FF0000
+Color3=#38DE21
+Color4=#FFE50A
+Color5=#1460D2
+Color6=#FF005D
+Color7=#00BBBB
+Color8=#BBBBBB
+Color9=#555555
+Color10=#F40E17
+Color11=#3BD01D
+Color12=#EDC809
+Color13=#5555FF
+Color14=#FF55FF
+Color15=#6AE3FA
+Color16=#FFFFFF
+Admin=#FF0000
+Remote=#1460D2
+Blue=#1460D2
+Turquoise=#00BBBB
+Teal=#1CCC6E
+Green=#38DE21
+Red=#FF0000
+Purple=#FF005D
+Pink=#FF55FF
+Orange=#FF7205
+Yellow=#FFE50A
+
+# Converted from the Ghostty themes "Cobalt2"
+# https://github.com/mbadolato/iTerm2-Color-Schemes

@@ -1,0 +1,35 @@
+[Palette]
+Name=Carbonfox
+Foreground=#F2F4F8
+Background=#161616
+Titlebar=#282828
+Color1=#282828
+Color2=#EE5396
+Color3=#25BE6A
+Color4=#08BDBA
+Color5=#78A9FF
+Color6=#BE95FF
+Color7=#33B1FF
+Color8=#DFDFE0
+Color9=#484848
+Color10=#F16DA6
+Color11=#46C880
+Color12=#2DC7C4
+Color13=#8CB6FF
+Color14=#C8A5FF
+Color15=#52BDFF
+Color16=#E4E4E5
+Admin=#EE5396
+Remote=#78A9FF
+Blue=#78A9FF
+Turquoise=#33B1FF
+Teal=#2CB8B4
+Green=#25BE6A
+Red=#EE5396
+Purple=#BE95FF
+Pink=#C8A5FF
+Orange=#7B88A8
+Yellow=#08BDBA
+
+# Converted from the Ghostty themes "Carbonfox"
+# https://github.com/mbadolato/iTerm2-Color-Schemes

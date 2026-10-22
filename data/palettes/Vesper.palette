@@ -1,0 +1,35 @@
+[Palette]
+Name=Vesper
+Foreground=#FFFFFF
+Background=#101010
+Titlebar=#232323
+Color1=#101010
+Color2=#F5A191
+Color3=#90B99F
+Color4=#E6B99D
+Color5=#ACA1CF
+Color6=#E29ECA
+Color7=#EA83A5
+Color8=#A0A0A0
+Color9=#7E7E7E
+Color10=#FF8080
+Color11=#99FFE4
+Color12=#FFC799
+Color13=#B9AEDA
+Color14=#ECAAD6
+Color15=#F591B2
+Color16=#FFFFFF
+Admin=#F5A191
+Remote=#ACA1CF
+Blue=#ACA1CF
+Turquoise=#EA83A5
+Teal=#BD9EA2
+Green=#90B99F
+Red=#F5A191
+Purple=#E29ECA
+Pink=#ECAAD6
+Orange=#EEAD97
+Yellow=#E6B99D
+
+# Converted from the Ghostty themes "Vesper"
+# https://github.com/mbadolato/iTerm2-Color-Schemes
