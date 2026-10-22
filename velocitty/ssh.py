@@ -504,7 +504,8 @@ class HostDialog(Adw.Dialog):
         # The password: typed in hidden, never shown, never read back into this dialog
         self.had_password = bool(values.get("password")) and not template
         self.forget = False
-        self.password = Adw.EntryRow(title=self.password_title())
+        self.password = Adw.EntryRow()
+        self.password.set_title(self.password_title())
         hide_text(self.password)
         self.password.connect("entry-activated", lambda *_: self.save())
         self.password.connect("changed", lambda *_: self.password.set_title(self.password_title()))
@@ -554,6 +555,8 @@ class HostDialog(Adw.Dialog):
             return _("Password (will be forgotten)")
         if self.had_password and not self.password.get_text():
             return _("Password (saved, type to change)")
+        if self.had_password:
+            return _("New Password (replaces the saved one)")
         return _("Password (optional)")
 
     def on_forget(self):
