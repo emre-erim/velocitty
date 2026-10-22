@@ -1,3 +1,12 @@
+velocitty (1.0.3+emre5) resolute; urgency=medium
+
+  * SSH address book: optional saved passwords, encrypted, never shown,
+    typed in through SSH_ASKPASS for that server's password prompt only
+  * About: Emre Edition, with links to this fork and to the original
+  * Fix a CSS warning (margin-end) in the SSH panel
+
+ -- Emre <emre.erim@gmail.com>  Thu, 22 Oct 2026 21:51:55 -0000
+
 velocitty (1.0.3+emre4) resolute; urgency=medium
 
   * Remove the vertical tabs
