@@ -5,6 +5,20 @@
 > *my* dream terminal emulator. It is not affiliated with Linux Mint or the xapp project, it is not
 > reviewed by them, and it may break. Use it if you like it, but please report bugs here, not upstream.
 
+## Screenshots
+
+![Split terminals with the Catppuccin Macchiato theme](screenshots/splits.png)
+*Split terminals, Terminator style, with one of the Ghostty themes (Catppuccin Macchiato).*
+
+![The SSH address book in a panel beside the terminal](screenshots/ssh.png)
+*The SSH address book: click a server to connect; the lock marks a saved password (TokyoNight).*
+
+![Vertical tabs as numbered squares, in light mode](screenshots/vertical-tabs.png)
+*Vertical tabs as numbered squares that take the color of their tab, in light mode.*
+
+![The Themes page of the preferences](screenshots/themes.png)
+*The Themes page: 25 palettes from Ghostty next to the 15 that come with Velocitty.*
+
 ## What happened here
 
 Terminator, Ghostty and Velocitty got a little too close one night, and this fork is their love child.
