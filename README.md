@@ -1,3 +1,69 @@
+# Velocitty, the Emre edition 🧪
+
+> ⚠️ **Experimental, personal, 100% vibe-coded.**
+> This is my own fork of [xapp-project/velocitty](https://github.com/xapp-project/velocitty), built to be
+> *my* dream terminal emulator. It is not affiliated with Linux Mint or the xapp project, it is not
+> reviewed by them, and it may break. Use it if you like it, but please report bugs here, not upstream.
+
+## What happened here
+
+Terminator, Ghostty and Velocitty got a little too close one night, and this fork is their love child.
+It got its looks from Velocitty, its split windows from Terminator and its taste in themes from Ghostty.
+
+Every line of the changes below was written in a chat with an AI assistant (Claude), tested, and kept
+because it felt right. Expect rough edges.
+
+### Split terminals (from Terminator and Ghostty)
+
+Any tab can be split into several terminals, side by side or one above the other, as deep as you like.
+The terminals without the focus are dimmed, the divider can be dragged with the mouse, and a new
+terminal opens in the folder of the one it was split from.
+
+| Action | Shortcut |
+| --- | --- |
+| Split right | `Ctrl+Shift+E` |
+| Split down | `Ctrl+Shift+O` |
+| Close the focused terminal (the tab, when it is not split) | `Ctrl+Shift+W` |
+| Move between terminals | `Alt+←` `Alt+→` `Alt+↑` `Alt+↓` |
+| Next / previous terminal | `Ctrl+Super+]` / `Ctrl+Super+[` |
+| Equal sizes | `Ctrl+Alt+=` |
+
+"Split Right", "Split Down" and "Close Terminal" are also in the right-click menu and the main menu.
+
+### More themes (from Ghostty)
+
+11 popular palettes, converted from the Ghostty themes in
+[mbadolato/iTerm2-Color-Schemes](https://github.com/mbadolato/iTerm2-Color-Schemes):
+12-bit Rainbow, Dracula, Gruvbox Dark, TokyoNight, Atom One Dark, Rose Pine, Kanagawa Wave,
+Everforest Dark Med, Night Owl, GitHub Dark Default and Ayu Mirage.
+
+### F10 belongs to the terminal
+
+The main menu moved from `F10` to `Ctrl+Shift+M`, so `F10` reaches Midnight Commander and friends again.
+
+### Known limitations
+
+- The split layout is not saved: a saved custom tab brings back its active terminal only.
+- Velocitty palettes have no cursor or selection color, so those parts of the Ghostty themes are not used.
+- `Alt+arrows` are taken by the splits. If your shell uses them, change them in `velocitty/application.py`.
+
+### Build on Arch / CachyOS
+
+```
+sudo pacman -S --needed git meson ninja python gettext pkgconf glib2 \
+  gtk4 libadwaita vte4 python-gobject python-setproctitle
+paru -S --needed python-xapp xapp-symbolic-icons
+git clone https://github.com/emre-erim/velocitty.git
+cd velocitty
+meson setup build --prefix=/usr
+meson compile -C build
+sudo meson install -C build
+```
+
+All credit for Velocitty itself goes to the Linux Mint team. The original README follows.
+
+---
+
 # Terminal Velocitty 🖥️🚲🏙️
 
 Terminal emulator for Linux desktops.
