@@ -34,8 +34,18 @@ def install_fallback_icons(display):
     missing = [name for name in ICONS if not theme.has_icon("xsi-%s-symbolic" % name)]
     if not missing:
         return
-    target = os.path.join(GLib.get_user_cache_dir(), "velocitty", "icons")
+    # The links go in a hicolor folder: GTK colors symbolic icons that are part of a theme to
+    # match the text, but leaves the ones lying loose in a search path in their file's own
+    # dark gray, which can't be seen on a dark headerbar.
+    base = os.path.join(GLib.get_user_cache_dir(), "velocitty", "icons")
+    target = os.path.join(base, "hicolor", "scalable", "actions")
     os.makedirs(target, exist_ok=True)
+    for old in os.listdir(base):   # the loose links of earlier versions
+        if old.startswith("xsi-"):
+            try:
+                os.remove(os.path.join(base, old))
+            except OSError:
+                pass
     roots = [path for path in theme.get_search_path() if os.path.isdir(path)]
     for name in missing:
         link = os.path.join(target, "xsi-%s-symbolic.svg" % name)
@@ -49,4 +59,4 @@ def install_fallback_icons(display):
                 except OSError:
                     pass
                 break
-    theme.add_search_path(target)
+    theme.add_search_path(base)
