@@ -45,8 +45,18 @@ terminals stay in view.
   Key file, jump host and other ssh options are under "Advanced".
 - The hosts of `~/.ssh/config` (and the files it includes) are listed too; "Save to the Address Book"
   in their ⋮ menu copies them.
-- Saved in `~/.local/state/velocitty/ssh.json`, readable by you only. Passwords are not stored: use
-  keys or your ssh agent. `Esc` closes the panel.
+- **Passwords, like JuiceSSH.** Type one when you add a server and it is typed in for you when you
+  connect. It is never shown again (the dialog can only replace or forget it), and a lock marks the
+  servers that have one.
+  - Encrypted in `~/.local/state/velocitty/ssh.json` with a key in `secret.key` next to it, both
+    readable by you only. Python's standard library only: no keyring, nothing to unlock.
+  - ssh gets it through `SSH_ASKPASS`: never in the command line or the environment of the shell.
+  - It goes to that server's own password prompt only, once. Anything else (a new host key, a key
+    passphrase, a one-time code, a jump host, a retry after a wrong password) is asked in the
+    terminal as usual.
+  - Honest limit: whoever can read your home folder can read the key too. Keys (`ssh-copy-id`)
+    are still the safer choice for important servers.
+- Saved in `~/.local/state/velocitty/ssh.json`, readable by you only. `Esc` closes the panel.
 
 ### More themes (from Ghostty)
 

@@ -1,0 +1,4 @@
+#!/usr/bin/python3
+from velocitty.askpass import main
+
+main()

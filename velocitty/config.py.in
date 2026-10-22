@@ -1,2 +1,3 @@
 VERSION = "@version@"
 DATA_DIR = "@data_dir@"
+LIBEXEC_DIR = "@libexec_dir@"

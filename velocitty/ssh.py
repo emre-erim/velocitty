@@ -4,6 +4,8 @@ import glob
 import json
 import os
 import shlex
+import sys
+import uuid
 
 import gi
 
@@ -13,12 +15,14 @@ from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk, Pango
 
 from velocitty import GETTEXT_DOMAIN
 from velocitty.i18n import l10n
+from velocitty.secret import encrypt
 
 _ = l10n(GETTEXT_DOMAIN)
 
 FILE = os.path.join(GLib.get_user_state_dir(), "velocitty", "ssh.json")
 SSH_CONFIG = os.path.expanduser("~/.ssh/config")
-FIELDS = ("name", "host", "user", "port", "key", "group", "options")
+FIELDS = ("id", "name", "host", "user", "port", "key", "group", "options", "password")
+ASKPASS_NAME = "velocitty-askpass"
 
 
 # -- the hosts -------------------------------------------------------------
@@ -42,6 +46,44 @@ def command_for(host):
     if host.get("user"):
         target = host["user"] + "@" + target
     return " ".join(shlex.quote(arg) for arg in argv + extra + [target])
+
+
+def askpass_program():
+    """The SSH_ASKPASS helper: installed with velocitty, or made in the cache when running
+    from the source tree."""
+    try:
+        from velocitty.config import LIBEXEC_DIR
+        installed = os.path.join(LIBEXEC_DIR, ASKPASS_NAME)
+        if os.access(installed, os.X_OK):
+            return installed
+    except ImportError:
+        pass
+    folder = os.path.join(GLib.get_user_cache_dir(), "velocitty")
+    path = os.path.join(folder, ASKPASS_NAME)
+    package = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    script = ("#!%s\nimport sys\nsys.path.insert(0, %r)\nfrom velocitty.askpass import main\nmain()\n"
+              % (sys.executable, package))
+    try:
+        os.makedirs(folder, exist_ok=True)
+        with open(path) as handle:
+            if handle.read() == script:
+                return path
+    except OSError:
+        pass
+    with open(path, "w") as handle:
+        handle.write(script)
+    os.chmod(path, 0o700)
+    return path
+
+
+def launch_command(host):
+    """What the tab runs to connect. With a saved password, ssh asks the helper, which gives
+    it to this host's password prompt only. Nothing secret is in the command line."""
+    command = command_for(host)
+    if host.get("password") and host.get("id"):
+        command = "env SSH_ASKPASS=%s SSH_ASKPASS_REQUIRE=force VELOCITTY_SSH_ID=%s %s" % (
+            shlex.quote(askpass_program()), shlex.quote(host["id"]), command)
+    return command
 
 
 def address_of(host):
@@ -111,10 +153,17 @@ class SshHosts(GObject.Object):
         try:
             with open(FILE) as handle:
                 entries = json.load(handle)
-            return [{key: str(entry.get(key) or "") for key in FIELDS}
-                    for entry in entries if isinstance(entry, dict) and entry.get("host")]
+            entries = [{key: str(entry.get(key) or "") for key in FIELDS}
+                       for entry in entries if isinstance(entry, dict) and entry.get("host")]
         except (OSError, ValueError, TypeError):
             return []
+        # Every host has an id: the password helper finds it with that
+        if any(not entry["id"] for entry in entries):
+            for entry in entries:
+                entry["id"] = entry["id"] or uuid.uuid4().hex
+            self.entries = entries
+            self.save()
+        return entries
 
     def save(self):
         try:
@@ -130,6 +179,7 @@ class SshHosts(GObject.Object):
 
     def put(self, old, new):
         """Add new, or replace old with it."""
+        new["id"] = (old or {}).get("id") or uuid.uuid4().hex
         if old is not None and old in self.entries:
             self.entries[self.entries.index(old)] = new
         else:
@@ -226,6 +276,9 @@ class HostRow(Gtk.ListBoxRow):
         box = Gtk.Box(spacing=10, margin_start=10, margin_end=4, margin_top=6, margin_bottom=6)
         box.append(Gtk.Image(icon_name="network-server-symbolic", css_classes=["dim-label"]))
         box.append(text)
+        if host.get("password"):
+            box.append(Gtk.Image(icon_name="channel-secure-symbolic", css_classes=["dim-label"],
+                                 tooltip_text=_("Password saved, typed in for you")))
         box.append(self.hint)
         box.append(more)
         self.set_child(box)
@@ -390,7 +443,7 @@ class SshPanel(Gtk.Box):
     # -- actions -----------------------------------------------------------
 
     def connect_to(self, host, split=False):
-        self.window.open_ssh(host["name"], command_for(host), split=split)
+        self.window.open_ssh(host["name"], launch_command(host), split=split)
         self.window.show_ssh_panel(False)
 
     def copy_command(self, host):
@@ -408,6 +461,22 @@ class SshPanel(Gtk.Box):
 
     def edit(self, entry, template=None):
         HostDialog(self.hosts, entry, template).present(self.window)
+
+
+def hide_text(row):
+    """An entry row that shows dots, with no way to reveal or copy what was typed."""
+    widget = row
+    stack = [row]
+    while stack:
+        widget = stack.pop()
+        if isinstance(widget, Gtk.Text):
+            widget.set_visibility(False)
+            widget.set_input_purpose(Gtk.InputPurpose.PASSWORD)
+            return
+        child = widget.get_first_child()
+        while child is not None:
+            stack.append(child)
+            child = child.get_next_sibling()
 
 
 class HostDialog(Adw.Dialog):
@@ -432,6 +501,22 @@ class HostDialog(Adw.Dialog):
         for row in (self.address, self.name, self.group):
             main.add(row)
 
+        # The password: typed in hidden, never shown, never read back into this dialog
+        self.had_password = bool(values.get("password")) and not template
+        self.forget = False
+        self.password = Adw.EntryRow(title=self.password_title())
+        hide_text(self.password)
+        self.password.connect("entry-activated", lambda *_: self.save())
+        self.password.connect("changed", lambda *_: self.password.set_title(self.password_title()))
+        if self.had_password:
+            self.forget_button = Gtk.Button(icon_name="user-trash-symbolic", valign=Gtk.Align.CENTER,
+                                            css_classes=["flat"], tooltip_text=_("Forget the Saved Password"))
+            self.forget_button.connect("clicked", lambda *_: self.on_forget())
+            self.password.add_suffix(self.forget_button)
+        secure = Adw.PreferencesGroup()
+        secure.add(self.password)
+        secure.set_description(_("Saved encrypted and never shown. It is typed in for you when you connect."))
+
         more = Adw.PreferencesGroup()
         advanced = Adw.ExpanderRow(title=_("Advanced"), subtitle=_("Key file, jump host and other ssh options"),
                                    expanded=bool(values.get("key") or values.get("options")))
@@ -444,7 +529,6 @@ class HostDialog(Adw.Dialog):
         advanced.add_row(self.key)
         advanced.add_row(self.options)
         more.add(advanced)
-        more.set_description(_("Passwords are not stored: use a key (ssh-copy-id) or your ssh agent."))
 
         self.save_button = Gtk.Button(label=_("Save"), css_classes=["suggested-action"])
         self.save_button.connect("clicked", lambda *_: self.save())
@@ -457,12 +541,26 @@ class HostDialog(Adw.Dialog):
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18, margin_top=12, margin_bottom=18,
                       margin_start=18, margin_end=18)
         box.append(main)
+        box.append(secure)
         box.append(more)
         view = Adw.ToolbarView(content=box)
         view.add_top_bar(header)
         self.set_child(view)
         self.set_focus(self.address)
         self.validate()
+
+    def password_title(self):
+        if self.forget:
+            return _("Password (will be forgotten)")
+        if self.had_password and not self.password.get_text():
+            return _("Password (saved, type to change)")
+        return _("Password (optional)")
+
+    def on_forget(self):
+        self.forget = True
+        self.password.set_text("")
+        self.password.set_title(self.password_title())
+        self.forget_button.set_sensitive(False)
 
     def parsed(self):
         return parse_address(self.address.get_text())
@@ -498,5 +596,13 @@ class HostDialog(Adw.Dialog):
         new = {"host": host, "user": user, "port": port, "key": self.key.get_text().strip(),
                "group": self.group.get_text().strip(), "options": self.options.get_text().strip()}
         new["name"] = self.name.get_text().strip() or address_of(new)
+        typed = self.password.get_text()
+        if typed:
+            new["password"] = encrypt(typed)
+        elif self.had_password and not self.forget:
+            new["password"] = self.entry.get("password", "")
+        else:
+            new["password"] = ""
+        self.password.set_text("")
         self.hosts.put(self.entry, new)
         self.close()

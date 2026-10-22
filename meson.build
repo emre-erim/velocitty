@@ -1,9 +1,10 @@
-project('velocitty', version : '1.0.3', meson_version : '>= 0.59.0')
+project('velocitty', version : '1.0.3+emre5', meson_version : '>= 0.59.0')
 
 prefix = get_option('prefix')
 datadir = get_option('datadir')
 bindir = get_option('bindir')
 velocitty_dir = join_paths(prefix, datadir, 'velocitty')
+libexec_dir = join_paths(prefix, get_option('libexecdir'), 'velocitty')
 
 python3 = import('python').find_installation('/usr/bin/python3')
 python_module_dir = python3.get_install_dir()
@@ -27,6 +28,7 @@ install_data(
   'velocitty/__init__.py',
   'velocitty/__main__.py',
   'velocitty/application.py',
+  'velocitty/askpass.py',
   'velocitty/custom_tab.py',
   'velocitty/custom_tabs_page.py',
   'velocitty/customize.py',
@@ -36,6 +38,7 @@ install_data(
   'velocitty/preferences.py',
   'velocitty/preview.py',
   'velocitty/searchbar.py',
+  'velocitty/secret.py',
   'velocitty/shell.py',
   'velocitty/shortcuts.py',
   'velocitty/split.py',
@@ -51,6 +54,7 @@ configure_file(
   configuration: {
     'version': meson.project_version(),
     'data_dir': velocitty_dir,
+    'libexec_dir': libexec_dir,
   },
   install: true,
   install_dir: python_module_dir,
@@ -60,6 +64,13 @@ install_data(
   'data/velocitty.in',
   rename: 'velocitty',
   install_dir: bindir,
+  install_mode: 'rwxr-xr-x',
+)
+
+install_data(
+  'data/velocitty-askpass.in',
+  rename: 'velocitty-askpass',
+  install_dir: libexec_dir,
   install_mode: 'rwxr-xr-x',
 )
 
