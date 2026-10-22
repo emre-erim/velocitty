@@ -257,17 +257,6 @@ window.terminal popover > arrow { background-color: $tb; }
 /* splits: a thin line between the terminals, the ones without the focus are dimmed */
 window.terminal paned > separator { background-color: $tb; min-width: 2px; min-height: 2px; }
 window.terminal .split-inactive vte-terminal { opacity: 0.6; }
-/* vertical tabs */
-window.terminal .vtabs { background-color: $tb; color: $tf; }
-window.terminal .vtabs-list { background-color: transparent; color: $tf; padding: 4px; }
-window.terminal .vtabs-list row.vtab { border-radius: 6px; margin: 1px 0; min-height: 30px; }
-window.terminal .vtabs-list row.vtab:selected { background-color: alpha($tf, 0.14); }
-window.terminal .vtabs-list row.vtab:hover:not(:selected) { background-color: alpha($tf, 0.07); }
-window.terminal .vtabs-list row.vtab.startup label { font-weight: bold; }
-window.terminal .vtabs-list row.vtab .vtab-close { min-width: 22px; min-height: 22px; padding: 0; opacity: 0.6; }
-window.terminal .vtabs-list row.vtab .vtab-attention { min-width: 6px; min-height: 6px; border-radius: 3px;
-    background-color: @accent_bg_color; }
-window.terminal .vtabs button { color: $tf; }
 /* the SSH panel */
 window.terminal .ssh-panel { background-color: $tb; color: $tf; }
 window.terminal .ssh-list { background-color: transparent; color: $tf; padding: 0 6px 6px 6px; }
@@ -296,7 +285,6 @@ COLOR_CSS = Template("""
     tabbar tab.$n { box-shadow: inset 0 -3px 0 $bg; }
     toolbarview.overview tabthumbnail.$n { background-color: $bg; color: $fg; }
     row.close-$n { box-shadow: inset 4px 0 0 $bg; }
-    .vtabs-list row.vtab.$n { box-shadow: inset 4px 0 0 $bg; }
 """)
 
 # A running program is a shade over the color of the tab, in the headerbar, the tab and the
@@ -306,8 +294,7 @@ RUNNING_CSS = Template("""
 window.terminal.running headerbar, window.terminal.running headerbar:backdrop {
     background-image: linear-gradient($shade, $shade);
 }
-window.terminal tabbar tab.running, window.terminal toolbarview.overview tabthumbnail.running,
-window.terminal .vtabs-list row.vtab.running {
+window.terminal tabbar tab.running, window.terminal toolbarview.overview tabthumbnail.running {
     background-image: linear-gradient($shade, $shade);
 }
 window.terminal.bell headerbar, window.terminal.bell headerbar:backdrop {

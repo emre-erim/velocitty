@@ -14,7 +14,6 @@ from velocitty.customize import CustomizePopover
 from velocitty.palette import CUSTOM_CLASSES, STATES
 from velocitty.split import SplitTab, focus_later, split_of
 from velocitty.ssh import SshPanel
-from velocitty.vtabs import SIDEBAR_WIDTH, TabSidebar
 from velocitty.tab import TermTab
 
 _ = l10n(GETTEXT_DOMAIN)
@@ -104,7 +103,6 @@ class TermWindow(Adw.ApplicationWindow):
         menu.append_section(None, section)
         section = Gio.Menu()
         section.append(_("SSH Servers"), "win.ssh-hosts")
-        section.append(_("Vertical Tabs"), "win.vertical-tabs")
         menu.append_section(None, section)
         section = Gio.Menu()
         section.append(_("Preferences"), "app.preferences")
@@ -126,14 +124,9 @@ class TermWindow(Adw.ApplicationWindow):
         self.tab_bar = Adw.TabBar(view=self.tab_view, autohide=True)
         self.tab_bar.get_first_child().set_can_focus(False)
 
-        # The tabs are in the tab bar, or in a sidebar beside the terminals
-        self.sidebar = TabSidebar(self)
-        self.body = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL, start_child=self.sidebar,
-                              end_child=self.tab_view, resize_start_child=False, shrink_start_child=False,
-                              position=SIDEBAR_WIDTH, css_classes=["vtabs-paned"])
         # The SSH servers, in a panel on the right that leaves the terminals in view
         self.ssh_panel = SshPanel(self)
-        self.ssh_split = Adw.OverlaySplitView(content=self.body, sidebar=self.ssh_panel, show_sidebar=False,
+        self.ssh_split = Adw.OverlaySplitView(content=self.tab_view, sidebar=self.ssh_panel, show_sidebar=False,
                                               sidebar_position=Gtk.PackType.END, min_sidebar_width=260,
                                               max_sidebar_width=380, sidebar_width_fraction=0.28)
         self.toolbar = Adw.ToolbarView(content=self.ssh_split)
@@ -190,9 +183,6 @@ class TermWindow(Adw.ApplicationWindow):
             action = Gio.SimpleAction.new(name, None)
             action.connect("activate", handler)
             self.add_action(action)
-
-        self.add_action(self.app.settings.create_action("vertical-tabs"))
-        self.apply_tab_layout()
 
         self.connect("map", lambda *_: GLib.idle_add(self.focus_terminal))
         self.connect("close-request", self.on_close_request)
@@ -504,14 +494,7 @@ class TermWindow(Adw.ApplicationWindow):
         for tab in self.tabs():
             tab.apply_colors(self.app.scheme())
 
-    def apply_tab_layout(self):
-        vertical = self.app.settings.get_boolean("vertical-tabs")
-        self.sidebar.set_visible(vertical)
-        self.tab_bar.set_visible(not vertical)
-        self.queue_restyle()
-
     def apply_settings(self):
-        self.apply_tab_layout()
         for tab in self.tabs():
             tab.apply_settings()
             tab.update_title()
@@ -737,19 +720,6 @@ class TermWindow(Adw.ApplicationWindow):
                     widget.add_css_class("running")
                 if isinstance(tab, TermTab) and tab.startup:
                     widget.add_css_class("startup")
-        for row in self.sidebar.rows():
-            for state in STATES + CUSTOM_CLASSES + ("running", "startup"):
-                row.remove_css_class(state)
-            split = row.page.get_child()
-            tab = split.active if isinstance(split, SplitTab) else None
-            if tab is None:
-                continue
-            if tab.style_class():
-                row.add_css_class(tab.style_class())
-            if tab.is_running():
-                row.add_css_class("running")
-            if tab.startup:
-                row.add_css_class("startup")
         return GLib.SOURCE_REMOVE
 
     # -- closing -----------------------------------------------------------

@@ -41,7 +41,6 @@ install_data(
   'velocitty/split.py',
   'velocitty/ssh.py',
   'velocitty/tab.py',
-  'velocitty/vtabs.py',
   'velocitty/window.py',
   install_dir: python_module_dir,
 )

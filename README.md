@@ -9,7 +9,7 @@
 
 Terminator, Ghostty and Velocitty got a little too close one night, and this fork is their love child.
 It got its looks from Velocitty, its split windows from Terminator and its taste in themes from Ghostty.
-deepin-terminal showed up later with an SSH address book and vertical tabs, and was made welcome.
+deepin-terminal showed up later with an SSH address book, and was made welcome.
 
 Every line of the changes below was written in a chat with an AI assistant (Claude), tested, and kept
 because it felt right. Expect rough edges.
@@ -47,12 +47,6 @@ terminals stay in view.
   in their ⋮ menu copies them.
 - Saved in `~/.local/state/velocitty/ssh.json`, readable by you only. Passwords are not stored: use
   keys or your ssh agent. `Esc` closes the panel.
-
-### Vertical tabs (from deepin-terminal)
-
-"Vertical Tabs" in the main menu, or in Preferences → Tabs. The tabs are listed in a sidebar that can
-be resized, with their colors, a mark for running commands, middle-click to close and right-click to
-customize.
 
 ### More themes (from Ghostty)
 

@@ -28,11 +28,6 @@
       <summary>Folders shown in the shell prompt</summary>
       <description>How many of the last folders of the current directory the prompt of a new shell shows, for shells that follow PROMPT_DIRTRIM, like bash. 0 shows the whole path.</description>
     </key>
-    <key name="vertical-tabs" type="b">
-      <default>false</default>
-      <summary>Vertical tabs</summary>
-      <description>List the tabs in a sidebar instead of the tab bar.</description>
-    </key>
     <key name="highlight-running" type="b">
       <default>true</default>
       <summary>Highlight tabs while a command is running</summary>
