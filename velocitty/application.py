@@ -89,7 +89,7 @@ class TermApp(Adw.Application):
             "win.zoom-reset": ["<Ctrl>0", "<Ctrl>KP_0"],
             "win.fullscreen": ["F11"],
             "win.customize-tab": ["F2"],
-            "win.main-menu": ["F10"],
+            "win.main-menu": ["<Ctrl><Shift>m"],
             "win.last-tab": ["<Ctrl>End"],
             "win.shortcuts": ["<Ctrl><Shift>question"],
             # Splits, as in Terminator

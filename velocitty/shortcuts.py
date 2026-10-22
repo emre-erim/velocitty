@@ -17,7 +17,7 @@ SECTIONS = [
         (_("Customize Tab"), "F2"),
         (_("View Custom Tabs"), "F3"),
         (_("View All Tabs"), "F4"),
-        (_("Main Menu"), "F10"),
+        (_("Main Menu"), "<Ctrl><Shift>m"),
         (_("Full Screen"), "F11"),
         (_("Preferences"), "<Ctrl>comma"),
         (_("Keyboard Shortcuts"), "<Ctrl><Shift>question"),
