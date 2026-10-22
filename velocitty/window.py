@@ -13,6 +13,8 @@ from velocitty.custom_tabs_page import CustomTabsPage
 from velocitty.customize import CustomizePopover
 from velocitty.palette import CUSTOM_CLASSES, STATES
 from velocitty.split import SplitTab, focus_later, split_of
+from velocitty.ssh import SshPage
+from velocitty.vtabs import SIDEBAR_WIDTH, TabSidebar
 from velocitty.tab import TermTab
 
 _ = l10n(GETTEXT_DOMAIN)
@@ -71,6 +73,8 @@ class TermWindow(Adw.ApplicationWindow):
         self.custom_tabs_button = Gtk.Button(icon_name="xsi-user-bookmarks-symbolic", tooltip_text=_("Custom Tabs"),
                                              action_name="win.custom-tabs", visible=False)
         self.header.pack_start(self.custom_tabs_button)
+        self.header.pack_start(Gtk.Button(icon_name="network-server-symbolic", tooltip_text=_("SSH Hosts"),
+                                          action_name="win.ssh-hosts"))
 
         # Shown in full screen only, in place of the window buttons, to leave it
         self.unfullscreen_button = Gtk.Button(icon_name="xsi-view-restore-symbolic", action_name="win.fullscreen",
@@ -97,6 +101,10 @@ class TermWindow(Adw.ApplicationWindow):
         section.append(_("Split Down"), "win.split-down")
         menu.append_section(None, section)
         section = Gio.Menu()
+        section.append(_("SSH Hosts"), "win.ssh-hosts")
+        section.append(_("Vertical Tabs"), "win.vertical-tabs")
+        menu.append_section(None, section)
+        section = Gio.Menu()
         section.append(_("Preferences"), "app.preferences")
         section.append(_("Keyboard Shortcuts"), "win.shortcuts")
         section.append(_("About"), "app.about")
@@ -116,7 +124,12 @@ class TermWindow(Adw.ApplicationWindow):
         self.tab_bar = Adw.TabBar(view=self.tab_view, autohide=True)
         self.tab_bar.get_first_child().set_can_focus(False)
 
-        self.toolbar = Adw.ToolbarView(content=self.tab_view)
+        # The tabs are in the tab bar, or in a sidebar beside the terminals
+        self.sidebar = TabSidebar(self)
+        self.body = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL, start_child=self.sidebar,
+                              end_child=self.tab_view, resize_start_child=False, shrink_start_child=False,
+                              position=SIDEBAR_WIDTH, css_classes=["vtabs-paned"])
+        self.toolbar = Adw.ToolbarView(content=self.body)
         self.toolbar.add_top_bar(self.header)
         self.toolbar.add_top_bar(self.tab_bar)
         self.overview.set_child(self.toolbar)
@@ -129,6 +142,7 @@ class TermWindow(Adw.ApplicationWindow):
         self.nav = Adw.NavigationView(pop_on_escape=True)
         self.nav.add(Adw.NavigationPage(child=self.overview, title=_("Terminal"), tag="terminal"))
         self.custom_tabs_page = CustomTabsPage(self)
+        self.ssh_page = SshPage(self)
         self.nav.connect("popped", lambda *_: self.focus_terminal())
         self.set_content(self.nav)
         self.custom_tabs_handler = self.app.custom_tabs.connect("changed", lambda *_: self.on_custom_tabs_changed())
@@ -152,6 +166,7 @@ class TermWindow(Adw.ApplicationWindow):
             "fullscreen": lambda *_: self.toggle_fullscreen(),
             "customize-tab": lambda *_: self.customize_tab(),
             "custom-tabs": lambda *_: self.show_custom_tabs(),
+            "ssh-hosts": lambda *_: self.show_ssh_hosts(),
             "main-menu": lambda *_: self.menu_button.popup(),
             "last-tab": lambda *_: self.switch_to_previous(),
             "shortcuts": lambda *_: self.get_application().show_shortcuts(),
@@ -169,6 +184,9 @@ class TermWindow(Adw.ApplicationWindow):
             action = Gio.SimpleAction.new(name, None)
             action.connect("activate", handler)
             self.add_action(action)
+
+        self.add_action(self.app.settings.create_action("vertical-tabs"))
+        self.apply_tab_layout()
 
         self.connect("map", lambda *_: GLib.idle_add(self.focus_terminal))
         self.connect("close-request", self.on_close_request)
@@ -220,6 +238,25 @@ class TermWindow(Adw.ApplicationWindow):
             self.overview.set_open(False)
             self.custom_tabs_page.refresh()
             self.nav.push(self.custom_tabs_page)
+
+    def show_ssh_hosts(self):
+        if self.nav.get_visible_page() is self.ssh_page:
+            self.nav.pop()
+            return
+        self.overview.set_open(False)
+        if self.nav.get_visible_page() is not self.nav.find_page("terminal"):
+            self.nav.pop()
+        self.nav.push(self.ssh_page)
+
+    def open_ssh(self, title, command):
+        """A new tab that connects: the shell runs the ssh command, and stays when it ends,
+        so a failed connection can be read."""
+        if self.nav.get_visible_page() is not self.nav.find_page("terminal"):
+            self.nav.pop()
+        page = self.new_tab(restore={"run": command, "title": title})
+        tab = page.get_child().active
+        tab.run_command = None   # it is not saved with the tab
+        return page
 
     def set_startup(self, tab, startup):
         tab.startup = startup
@@ -447,7 +484,14 @@ class TermWindow(Adw.ApplicationWindow):
         for tab in self.tabs():
             tab.apply_colors(self.app.scheme())
 
+    def apply_tab_layout(self):
+        vertical = self.app.settings.get_boolean("vertical-tabs")
+        self.sidebar.set_visible(vertical)
+        self.tab_bar.set_visible(not vertical)
+        self.queue_restyle()
+
     def apply_settings(self):
+        self.apply_tab_layout()
         for tab in self.tabs():
             tab.apply_settings()
             tab.update_title()
@@ -673,6 +717,19 @@ class TermWindow(Adw.ApplicationWindow):
                     widget.add_css_class("running")
                 if isinstance(tab, TermTab) and tab.startup:
                     widget.add_css_class("startup")
+        for row in self.sidebar.rows():
+            for state in STATES + CUSTOM_CLASSES + ("running", "startup"):
+                row.remove_css_class(state)
+            split = row.page.get_child()
+            tab = split.active if isinstance(split, SplitTab) else None
+            if tab is None:
+                continue
+            if tab.style_class():
+                row.add_css_class(tab.style_class())
+            if tab.is_running():
+                row.add_css_class("running")
+            if tab.startup:
+                row.add_css_class("startup")
         return GLib.SOURCE_REMOVE
 
     # -- closing -----------------------------------------------------------

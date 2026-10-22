@@ -9,6 +9,7 @@
 
 Terminator, Ghostty and Velocitty got a little too close one night, and this fork is their love child.
 It got its looks from Velocitty, its split windows from Terminator and its taste in themes from Ghostty.
+deepin-terminal showed up later with an SSH address book and vertical tabs, and was made welcome.
 
 Every line of the changes below was written in a chat with an AI assistant (Claude), tested, and kept
 because it felt right. Expect rough edges.
@@ -29,6 +30,24 @@ terminal opens in the folder of the one it was split from.
 | Equal sizes | `Ctrl+Alt+=` |
 
 "Split Right", "Split Down" and "Close Terminal" are also in the right-click menu and the main menu.
+
+### SSH address book (from deepin-terminal)
+
+`Ctrl+Shift+R`, the server button in the headerbar, or "SSH Hosts" in the main menu.
+
+- Save hosts with a name, user, port, key file, group and extra ssh options (`-J jumphost`...).
+  They are kept in `~/.local/state/velocitty/ssh.json`, readable by you only. Passwords are not
+  stored: use keys or your ssh agent.
+- The hosts of `~/.ssh/config` (and the files it includes) are listed too, and can be saved with +.
+- Type to search, Enter connects. Type `user@host` (or anything ssh understands) and press Enter
+  to connect to a host that isn't listed.
+- Each host opens in a new tab named after it. When ssh ends, the tab stays, so errors can be read.
+
+### Vertical tabs (from deepin-terminal)
+
+"Vertical Tabs" in the main menu, or in Preferences → Tabs. The tabs are listed in a sidebar that can
+be resized, with their colors, a mark for running commands, middle-click to close and right-click to
+customize.
 
 ### More themes (from Ghostty)
 

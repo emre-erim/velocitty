@@ -16,6 +16,7 @@ SECTIONS = [
         (_("Close Tab"), "<Ctrl><Shift>w"),
         (_("Customize Tab"), "F2"),
         (_("View Custom Tabs"), "F3"),
+        (_("SSH Hosts"), "<Ctrl><Shift>r"),
         (_("View All Tabs"), "F4"),
         (_("Main Menu"), "<Ctrl><Shift>m"),
         (_("Full Screen"), "F11"),

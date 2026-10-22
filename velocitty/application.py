@@ -19,6 +19,7 @@ from velocitty.i18n import l10n
 from velocitty.icons import install_fallback_icons
 
 from velocitty.custom_tab import CustomTabs
+from velocitty.ssh import SshHosts
 from velocitty.config import VERSION
 from velocitty.palette import build_css, load_palette
 from velocitty.preferences import Preferences
@@ -48,6 +49,7 @@ class TermApp(Adw.Application):
         self.preferences = None
         self.shortcuts = None
         self.custom_tabs = CustomTabs()
+        self.ssh_hosts = SshHosts()
         self.launched = False
         self.provider = Gtk.CssProvider()
         for name, short, arg, description, placeholder in OPTIONS:
@@ -85,6 +87,7 @@ class TermApp(Adw.Application):
             "win.new-tab": ["<Ctrl><Shift>t"],
             "win.close-tab": ["<Ctrl><Shift>w"],
             "win.custom-tabs": ["F3"],
+            "win.ssh-hosts": ["<Ctrl><Shift>r"],
             "win.overview": ["F4"],
             "win.zoom-in": ["<Ctrl>plus", "<Ctrl>equal", "<Ctrl>KP_Add"],
             "win.zoom-out": ["<Ctrl>minus", "<Ctrl>KP_Subtract"],

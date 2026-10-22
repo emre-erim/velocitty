@@ -123,6 +123,8 @@ class Preferences(Adw.Window):
         group.add(choice_row(settings, "tab-folders", _("Shorten Paths"), [
             (0, _("Don't Shorten")), (1, _("Last Folder")), (2, _("Last Two Folders")),
             (3, _("Last Three Folders"))]))
+        group.add(switch_row(settings, "vertical-tabs", _("Vertical Tabs"),
+                             _("List the tabs in a sidebar instead of the tab bar")))
         group.add(switch_row(settings, "highlight-running", _("Highlight Running Commands"),
                              _("Color the tab and the headerbar while a command is running")))
         group.add(switch_row(settings, "visual-bell", _("Visual Bell"),
