@@ -257,6 +257,20 @@ window.terminal popover > arrow { background-color: $tb; }
 /* splits: a thin line between the terminals, the ones without the focus are dimmed */
 window.terminal paned > separator { background-color: $tb; min-width: 2px; min-height: 2px; }
 window.terminal .split-inactive vte-terminal { opacity: 0.6; }
+/* vertical tabs: numbered squares in a narrow rail */
+window.terminal .vtabs { background-color: $tb; color: $tf; min-width: 52px; }
+window.terminal .vtabs button.vtab {
+    min-width: 38px; min-height: 38px; padding: 0; border-radius: 10px;
+    background-color: alpha($tf, 0.07); color: $tf; box-shadow: none; }
+window.terminal .vtabs button.vtab:hover { background-color: alpha($tf, 0.14); }
+window.terminal .vtabs button.vtab.selected { box-shadow: inset 0 0 0 2px $tf; }
+window.terminal .vtabs button.vtab.selected .vtab-number { font-size: 1.15em; }
+window.terminal .vtabs button.vtab-new { background-color: transparent; opacity: 0.7; }
+window.terminal .vtabs button.vtab-new:hover { opacity: 1; background-color: alpha($tf, 0.10); }
+window.terminal .vtabs .vtab-number { font-weight: 700; font-size: 1.05em; font-feature-settings: "tnum"; }
+window.terminal .vtabs button.vtab.startup .vtab-number { text-decoration: underline; }
+window.terminal .vtabs .vtab-attention { min-width: 8px; min-height: 8px; border-radius: 4px;
+    margin: 4px; background-color: @accent_bg_color; box-shadow: 0 0 0 2px $tb; }
 /* the SSH panel */
 window.terminal .ssh-panel { background-color: $tb; color: $tf; }
 window.terminal .ssh-list { background-color: transparent; color: $tf; padding: 0 6px 6px 6px; }
@@ -285,6 +299,8 @@ COLOR_CSS = Template("""
     tabbar tab.$n { box-shadow: inset 0 -3px 0 $bg; }
     toolbarview.overview tabthumbnail.$n { background-color: $bg; color: $fg; }
     row.close-$n { box-shadow: inset 4px 0 0 $bg; }
+    window.terminal .vtabs button.vtab.$n, window.terminal .vtabs button.vtab.$n:hover {
+        background-color: $bg; color: $fg; }
 """)
 
 # A running program is a shade over the color of the tab, in the headerbar, the tab and the
@@ -294,7 +310,8 @@ RUNNING_CSS = Template("""
 window.terminal.running headerbar, window.terminal.running headerbar:backdrop {
     background-image: linear-gradient($shade, $shade);
 }
-window.terminal tabbar tab.running, window.terminal toolbarview.overview tabthumbnail.running {
+window.terminal tabbar tab.running, window.terminal toolbarview.overview tabthumbnail.running,
+window.terminal .vtabs button.vtab.running {
     background-image: linear-gradient($shade, $shade);
 }
 window.terminal.bell headerbar, window.terminal.bell headerbar:backdrop {

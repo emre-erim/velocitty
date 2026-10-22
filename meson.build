@@ -1,4 +1,4 @@
-project('velocitty', version : '1.0.3+emre7', meson_version : '>= 0.59.0')
+project('velocitty', version : '1.0.3+emre8', meson_version : '>= 0.59.0')
 
 prefix = get_option('prefix')
 datadir = get_option('datadir')
@@ -44,6 +44,7 @@ install_data(
   'velocitty/split.py',
   'velocitty/ssh.py',
   'velocitty/tab.py',
+  'velocitty/vtabs.py',
   'velocitty/window.py',
   install_dir: python_module_dir,
 )
