@@ -1,3 +1,12 @@
+velocitty (1.0.3+emre10) resolute; urgency=medium
+
+  * Vertical tabs: the arrows are shown or hidden after the rail is laid
+    out, not during it (Gtk-CRITICAL gtk_widget_measure and size_allocate
+    warnings)
+  * Fix an AttributeError when a setting changes while a window is made
+
+ -- Emre <emre.erim@gmail.com>  Thu, 22 Oct 2026 22:48:13 -0000
+
 velocitty (1.0.3+emre9) resolute; urgency=medium
 
   * Vertical tabs: arrows with the number of hidden tabs when they don't
