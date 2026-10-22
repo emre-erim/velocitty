@@ -247,6 +247,10 @@ class TermWindow(Adw.ApplicationWindow):
             self.ssh_button.set_active(show)   # comes back here through "toggled"
             return
         if self.ssh_split.get_show_sidebar() != show:
+            # The terminals get narrower or wider: that is not a resize to show
+            quiet = GLib.get_monotonic_time() + 800000
+            for tab in self.tabs():
+                tab.quiet_until = max(tab.quiet_until, quiet)
             self.ssh_split.set_show_sidebar(show)
         if show:
             self.ssh_panel.opened()
