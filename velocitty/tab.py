@@ -8,7 +8,7 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Vte", "3.91")
 from gi.repository import Gdk, Gio, GLib, Gtk, Pango, Vte
-from xapp.util import l10n
+from velocitty.i18n import l10n
 
 from velocitty import GETTEXT_DOMAIN
 from velocitty.palette import rgba, terminal_colors

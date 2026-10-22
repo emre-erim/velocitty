@@ -15,7 +15,8 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, Gio, Gtk
 from setproctitle import setproctitle
-from xapp.util import l10n
+from velocitty.i18n import l10n
+from velocitty.icons import install_fallback_icons
 
 from velocitty.custom_tab import CustomTabs
 from velocitty.config import VERSION
@@ -60,6 +61,7 @@ class TermApp(Adw.Application):
     def do_startup(self):
         GLib.set_prgname(APP_ID)   # parsed: the windows are made from here on
         Adw.Application.do_startup(self)
+        install_fallback_icons(Gdk.Display.get_default())
         Gtk.StyleContext.add_provider_for_display(
             Gdk.Display.get_default(), self.provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         Adw.StyleManager.get_default().connect("notify::dark", lambda *_: self.apply_scheme())

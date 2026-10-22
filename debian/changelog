@@ -1,3 +1,14 @@
+velocitty (1.0.3+emre1) resolute; urgency=medium
+
+  * Experimental fork by Emre: https://github.com/emre-erim/velocitty
+  * Split terminals, Terminator/Ghostty style
+  * 11 palettes converted from Ghostty themes, with light versions
+  * Light and dark style buttons work with every palette
+  * Main menu moved from F10 to Ctrl+Shift+M
+  * Works without xapp.util (python3-xapp < 3.0.3) and without xapp-symbolic-icons
+
+ -- Emre <emre.erim@gmail.com>  Thu, 22 Oct 2026 14:39:31 -0000
+
 velocitty (1.0.3) adrien; urgency=medium
 
   [ Michael Webster ]

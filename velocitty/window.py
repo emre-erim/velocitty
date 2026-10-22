@@ -6,7 +6,7 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk
-from xapp.util import l10n
+from velocitty.i18n import l10n
 
 from velocitty import GETTEXT_DOMAIN
 from velocitty.custom_tabs_page import CustomTabsPage

@@ -3,7 +3,7 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, GObject, Gio, GLib, Gtk, Pango
-from xapp.util import l10n
+from velocitty.i18n import l10n
 
 from velocitty import GETTEXT_DOMAIN
 from velocitty.palette import display_name, list_palettes

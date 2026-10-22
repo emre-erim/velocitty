@@ -2,7 +2,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 from gi.repository import GLib, Gtk
-from xapp.util import l10n
+from velocitty.i18n import l10n
 
 from velocitty import GETTEXT_DOMAIN
 from velocitty.palette import CUSTOM_COLORS

@@ -30,6 +30,8 @@ install_data(
   'velocitty/custom_tab.py',
   'velocitty/custom_tabs_page.py',
   'velocitty/customize.py',
+  'velocitty/i18n.py',
+  'velocitty/icons.py',
   'velocitty/palette.py',
   'velocitty/preferences.py',
   'velocitty/preview.py',
