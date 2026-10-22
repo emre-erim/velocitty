@@ -1,3 +1,10 @@
+velocitty (1.0.3+emre8) resolute; urgency=medium
+
+  * Vertical tabs are back, as a narrow rail of numbered squares that take
+    the color of their tab (main menu or Preferences)
+
+ -- Emre <emre.erim@gmail.com>  Thu, 22 Oct 2026 22:30:50 -0000
+
 velocitty (1.0.3+emre7) resolute; urgency=medium
 
   * Fix: editing a server with a saved password failed to open the dialog

@@ -1,8 +1,8 @@
 # Maintainer: Emre <emre.erim@gmail.com>
 # Experimental fork of Linux Mint's Velocitty: splits, Ghostty themes, working light/dark.
 pkgname=velocitty-emre
-_tag=v1.0.3+emre7
-pkgver=1.0.3.emre7
+_tag=v1.0.3+emre8
+pkgver=1.0.3.emre8
 pkgrel=1
 pkgdesc="Velocitty terminal, experimental fork with splits, Ghostty themes and an SSH address book"
 arch=('any')
