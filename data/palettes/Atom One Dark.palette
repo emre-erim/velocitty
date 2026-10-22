@@ -1,0 +1,34 @@
+[Palette]
+Name=Atom One Dark
+Foreground=#ABB2BF
+Background=#21252B
+Titlebar=#2C3037
+Color1=#21252B
+Color2=#E06C75
+Color3=#98C379
+Color4=#E5C07B
+Color5=#61AFEF
+Color6=#C678DD
+Color7=#56B6C2
+Color8=#ABB2BF
+Color9=#767676
+Color10=#E06C75
+Color11=#98C379
+Color12=#E5C07B
+Color13=#61AFEF
+Color14=#C678DD
+Color15=#56B6C2
+Color16=#ABB2BF
+Admin=#E06C75
+Remote=#61AFEF
+Blue=#61AFEF
+Turquoise=#56B6C2
+Teal=#77BC9E
+Green=#98C379
+Red=#E06C75
+Purple=#C678DD
+Pink=#C678DD
+Orange=#E29678
+Yellow=#E5C07B
+
+# Converted from the Ghostty theme "Atom One Dark" (https://github.com/mbadolato/iTerm2-Color-Schemes)

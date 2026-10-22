@@ -1,0 +1,34 @@
+[Palette]
+Name=12-bit Rainbow
+Foreground=#FEFFFF
+Background=#040404
+Titlebar=#1A1A1A
+Color1=#000000
+Color2=#A03050
+Color3=#40D080
+Color4=#E09040
+Color5=#3060B0
+Color6=#603090
+Color7=#0090C0
+Color8=#DBDED8
+Color9=#685656
+Color10=#C06060
+Color11=#90D050
+Color12=#E0D000
+Color13=#00B0C0
+Color14=#801070
+Color15=#20B0C0
+Color16=#FFFFFF
+Admin=#C06060
+Remote=#3060B0
+Blue=#3060B0
+Turquoise=#00B0C0
+Teal=#40D080
+Green=#90D050
+Red=#C06060
+Purple=#603090
+Pink=#A03050
+Orange=#E09040
+Yellow=#E0D000
+
+# Converted from the Ghostty theme "12-bit Rainbow" (https://github.com/mbadolato/iTerm2-Color-Schemes)

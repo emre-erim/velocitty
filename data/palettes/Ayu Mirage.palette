@@ -1,0 +1,34 @@
+[Palette]
+Name=Ayu Mirage
+Foreground=#CCCAC2
+Background=#1F2430
+Titlebar=#2D313C
+Color1=#171B24
+Color2=#ED8274
+Color3=#87D96C
+Color4=#FACC6E
+Color5=#6DCBFA
+Color6=#DABAFA
+Color7=#90E1C6
+Color8=#C7C7C7
+Color9=#686868
+Color10=#F28779
+Color11=#D5FF80
+Color12=#FFD173
+Color13=#73D0FF
+Color14=#DFBFFF
+Color15=#95E6CB
+Color16=#FFFFFF
+Admin=#ED8274
+Remote=#6DCBFA
+Blue=#6DCBFA
+Turquoise=#90E1C6
+Teal=#8CDD99
+Green=#87D96C
+Red=#ED8274
+Purple=#DABAFA
+Pink=#DFBFFF
+Orange=#F4A771
+Yellow=#FACC6E
+
+# Converted from the Ghostty theme "Ayu Mirage" (https://github.com/mbadolato/iTerm2-Color-Schemes)
