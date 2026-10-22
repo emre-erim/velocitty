@@ -111,8 +111,8 @@ jobs:
         run: |
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" dist/*.deb dist/*.pkg.tar.zst --clobber
-            gh release edit "$TAG" --notes-file notes.md
+            gh release edit "$TAG" --notes-file notes.md --prerelease=false --latest
           else
-            gh release create "$TAG" dist/*.deb dist/*.pkg.tar.zst --prerelease \
+            gh release create "$TAG" dist/*.deb dist/*.pkg.tar.zst --latest \
               --title "velocitty ${TAG#v}" --notes-file notes.md
           fi
