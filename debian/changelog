@@ -1,3 +1,12 @@
+velocitty (1.0.3+emre3) resolute; urgency=medium
+
+  * SSH address book in a panel beside the terminals, with "Connect →" on
+    hover, a ⋮ menu (split, copy command, edit, remove), a "Connect to"
+    row for what is typed, and an empty state that explains itself
+  * Simpler server dialog: an address and a name, the rest under Advanced
+
+ -- Emre <emre.erim@gmail.com>  Thu, 22 Oct 2026 16:10:49 -0000
+
 velocitty (1.0.3+emre2) resolute; urgency=medium
 
   * SSH address book: saved hosts and ~/.ssh/config, search, quick connect
