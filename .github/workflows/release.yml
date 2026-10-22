@@ -28,7 +28,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends debhelper dpkg-dev gettext \
+          sudo apt-get install -y --no-install-recommends build-essential debhelper dpkg-dev gettext \
             libglib2.0-dev libgtk-4-bin meson ninja-build pkg-config python3
       - name: Check that the version matches the tag
         run: |
