@@ -205,6 +205,9 @@ window.terminal popover > arrow { background-color: $tb; }
     background-color: color-mix(in srgb, $bg 88%, transparent);
 }
 .search-bar { padding: 6px; }
+/* splits: a thin line between the terminals, the ones without the focus are dimmed */
+window.terminal paned > separator { background-color: $tb; min-width: 2px; min-height: 2px; }
+window.terminal .split-inactive vte-terminal { opacity: 0.6; }
 row.drop { box-shadow: 0 -2px 0 0 @accent_bg_color; }
 """)
 

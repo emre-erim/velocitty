@@ -33,6 +33,18 @@ SECTIONS = [
         (_("Zoom Out"), "<Ctrl>minus"),
         (_("Reset Zoom"), "<Ctrl>0"),
     ]),
+    (_("Splits"), [
+        (_("Split Right"), "<Ctrl><Shift>e"),
+        (_("Split Down"), "<Ctrl><Shift>o"),
+        (_("Close Terminal"), "<Ctrl><Shift>w"),
+        (_("Focus Left"), "<Alt>Left"),
+        (_("Focus Right"), "<Alt>Right"),
+        (_("Focus Up"), "<Alt>Up"),
+        (_("Focus Down"), "<Alt>Down"),
+        (_("Next Terminal"), "<Ctrl><Super>bracketright"),
+        (_("Previous Terminal"), "<Ctrl><Super>bracketleft"),
+        (_("Equal Sizes"), "<Ctrl><Alt>equal"),
+    ]),
     (_("Tabs"), [
         (_("Previous Tab"), "<Ctrl>Page_Up"),
         (_("Next Tab"), "<Ctrl>Page_Down"),

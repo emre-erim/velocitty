@@ -232,7 +232,9 @@ class TermTab(Gtk.Overlay):
             self.window.flash_headerbar()
         else:
             # Not in front: mark the tab, until it is selected again
-            self.window.tab_view.get_page(self).set_needs_attention(True)
+            page = self.window.page_of(self)
+            if page is not None:
+                page.set_needs_attention(True)
 
     # -- zoom --------------------------------------------------------------
 
@@ -463,8 +465,14 @@ class TermTab(Gtk.Overlay):
         section.append(_("Select All"), "term.select-all")
         section.append(_("Find…"), "term.find")
         self.menu.append_section(None, section)
+        section = Gio.Menu()
+        section.append(_("Split Right"), "win.split-right")
+        section.append(_("Split Down"), "win.split-down")
+        section.append(_("Close Terminal"), "win.close-pane")
+        self.menu.append_section(None, section)
 
     def on_context_menu(self, gesture, n_press, x, y):
+        self.terminal.grab_focus()   # the menu works on this terminal of a split tab
         self.popup_menu(x, y)
 
     def popup_menu_at_cursor(self):

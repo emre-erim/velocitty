@@ -12,6 +12,7 @@ from velocitty import GETTEXT_DOMAIN
 from velocitty.custom_tabs_page import CustomTabsPage
 from velocitty.customize import CustomizePopover
 from velocitty.palette import CUSTOM_CLASSES, STATES
+from velocitty.split import SplitTab, focus_later, split_of
 from velocitty.tab import TermTab
 
 _ = l10n(GETTEXT_DOMAIN)
@@ -92,6 +93,10 @@ class TermWindow(Adw.ApplicationWindow):
         section.append(_("New Window"), "app.new-window")
         menu.append_section(None, section)
         section = Gio.Menu()
+        section.append(_("Split Right"), "win.split-right")
+        section.append(_("Split Down"), "win.split-down")
+        menu.append_section(None, section)
+        section = Gio.Menu()
         section.append(_("Preferences"), "app.preferences")
         section.append(_("Keyboard Shortcuts"), "win.shortcuts")
         section.append(_("About"), "app.about")
@@ -150,6 +155,16 @@ class TermWindow(Adw.ApplicationWindow):
             "main-menu": lambda *_: self.menu_button.popup(),
             "last-tab": lambda *_: self.switch_to_previous(),
             "shortcuts": lambda *_: self.get_application().show_shortcuts(),
+            "split-right": lambda *_: self.split(Gtk.Orientation.HORIZONTAL),
+            "split-down": lambda *_: self.split(Gtk.Orientation.VERTICAL),
+            "close-pane": lambda *_: self.close_tab(self.current_tab()),
+            "focus-left": lambda *_: self.focus_neighbor("left"),
+            "focus-right": lambda *_: self.focus_neighbor("right"),
+            "focus-up": lambda *_: self.focus_neighbor("up"),
+            "focus-down": lambda *_: self.focus_neighbor("down"),
+            "focus-next": lambda *_: self.focus_cycle(1),
+            "focus-previous": lambda *_: self.focus_cycle(-1),
+            "equalize": lambda *_: self.equalize(),
         }.items():
             action = Gio.SimpleAction.new(name, None)
             action.connect("activate", handler)
@@ -167,7 +182,7 @@ class TermWindow(Adw.ApplicationWindow):
         tab = TermTab(self, self.app.settings, command, cwd, restore)
         tab.apply_colors(self.app.scheme())
         selected = self.tab_view.get_selected_page()
-        page = self.tab_view.add_page(tab, None)
+        page = self.tab_view.add_page(SplitTab(tab), None)
         page.set_title(_("Terminal"))
         if at_end:
             self.tab_view.reorder_page(page, self.tab_view.get_n_pages() - 1)
@@ -190,9 +205,9 @@ class TermWindow(Adw.ApplicationWindow):
         while widget is not None and widget.get_css_name() not in ("tab", "tabthumbnail"):
             widget = widget.get_parent()
         page = widget.get_property("page") if widget is not None else None
-        if page is not None and isinstance(page.get_child(), TermTab):
+        if page is not None and isinstance(page.get_child(), SplitTab):
             gesture.set_state(Gtk.EventSequenceState.CLAIMED)
-            self.customize_tab(page.get_child())
+            self.customize_tab(page.get_child().active)
 
     def on_custom_tabs_changed(self):
         self.custom_tabs_button.set_visible(bool(self.app.custom_tabs.entries))
@@ -215,28 +230,34 @@ class TermWindow(Adw.ApplicationWindow):
         self.overview.set_open(not self.overview.get_open())
 
     def on_close_page(self, view, page):
-        tab = page.get_child()
-        if not isinstance(tab, TermTab) or self.closing:
+        split = page.get_child()
+        if not isinstance(split, SplitTab) or self.closing:
             return False
-        if tab.kind != "idle" and not tab.shell_exited:
-            self.confirm_close_tab(page, tab)
+        panes = split.panes()
+        busy = [tab for tab in panes if tab.kind != "idle" and not tab.shell_exited]
+        if busy:
+            self.confirm_close_tab(page, panes, busy)
             return True   # the tab is closed, or not, when the question is answered
-        self.record(tab)
-        tab.hangup()
+        self.close_panes(panes)
         return False   # the tab is closed as usual
 
-    def confirm_close_tab(self, page, tab):
-        dialog = self.build_close_dialog(_("Close Tab?"), [tab])
-        dialog.connect("response", self.on_close_tab_response, page, tab)
-        dialog.present(self)
-
-    def on_close_tab_response(self, dialog, response, page, tab):
-        close = response == "close"
-        if close:
+    def close_panes(self, panes):
+        for tab in panes:
             self.record(tab)
             tab.hangup()
+
+    def confirm_close_tab(self, page, panes, busy):
+        dialog = self.build_close_dialog(_("Close Tab?"), busy)
+        dialog.connect("response", self.on_close_tab_response, page, panes)
+        dialog.present(self)
+
+    def on_close_tab_response(self, dialog, response, page, panes):
+        close = response == "close"
+        if close:
+            self.close_panes(panes)
         else:
-            tab.closing = False
+            for tab in panes:
+                tab.closing = False
         self.tab_view.close_page_finish(page, close)
 
     def build_close_dialog(self, heading, busy):
@@ -283,7 +304,7 @@ class TermWindow(Adw.ApplicationWindow):
 
     def reopen(self, entry):
         page = self.new_tab(None, existing_directory(entry.get("cwd")), restore=entry, at_end=True)
-        page.get_child().entry = entry
+        page.get_child().active.entry = entry
         return page
 
     def open_custom_tabs(self, entries):
@@ -295,9 +316,10 @@ class TermWindow(Adw.ApplicationWindow):
 
     def on_page_attached(self, view, page, position):
         # A tab can come from another window
-        tab = page.get_child()
-        tab.window = self
-        self.show_title(page, tab)
+        split = page.get_child()
+        for tab in split.panes():
+            tab.window = self
+        self.show_title(page, split.active)
         self.queue_restyle()
         if not self.get_visible():
             self.present()
@@ -316,12 +338,78 @@ class TermWindow(Adw.ApplicationWindow):
             self.tab_view.set_selected_page(page)
 
     def close_tab(self, tab):
+        """Close a terminal: the pane when the tab is split, else the whole tab."""
         if tab is None or getattr(tab, "closing", False):
             return   # the shell exiting after the tab was closed by hand
+        split = split_of(tab)
+        if split is not None and split.is_split():
+            if tab.kind != "idle" and not tab.shell_exited:
+                dialog = self.build_close_dialog(_("Close Terminal?"), [tab])
+                dialog.connect("response", lambda d, r: self.remove_pane(tab) if r == "close" else None)
+                dialog.present(self)
+            else:
+                self.remove_pane(tab)
+            return
         tab.closing = True
-        page = self.tab_view.get_page(tab)
+        page = self.page_of(tab)
         if page is not None:
             self.tab_view.close_page(page)
+
+    # -- splits ------------------------------------------------------------
+
+    def page_of(self, tab):
+        """The page of the tab view a terminal is in, or None."""
+        split = split_of(tab)
+        if split is None or not split.is_ancestor(self.tab_view):
+            return None
+        return self.tab_view.get_page(split)
+
+    def split(self, orientation):
+        tab = self.current_tab()
+        split = split_of(tab)
+        if split is None:
+            return
+        new = TermTab(self, self.app.settings, None, tab.current_directory() or tab.last_cwd)
+        new.apply_colors(self.app.scheme())
+        split.split(tab, new, orientation)
+        focus_later(new)
+
+    def remove_pane(self, tab):
+        split = split_of(tab)
+        if split is None or getattr(tab, "closing", False):
+            return
+        tab.closing = True
+        self.record(tab)
+        tab.hangup()
+        active = split.remove(tab)
+        if active is not None and split is self.tab_view.get_selected_page().get_child():
+            focus_later(active)
+
+    def active_pane_changed(self, split, tab):
+        if not split.is_ancestor(self.tab_view):
+            return
+        self.show_title(self.tab_view.get_page(split), tab)
+        if split is self.tab_view.get_selected_page().get_child():
+            self.refresh()
+
+    def focus_neighbor(self, direction):
+        tab = self.current_tab()
+        split = split_of(tab)
+        other = split.neighbor(tab, direction) if split else None
+        if other is not None:
+            other.terminal.grab_focus()
+
+    def focus_cycle(self, step):
+        tab = self.current_tab()
+        split = split_of(tab)
+        other = split.cycle(tab, step) if split else None
+        if other is not None:
+            other.terminal.grab_focus()
+
+    def equalize(self):
+        split = split_of(self.current_tab())
+        if split is not None:
+            split.equalize()
 
     def focus_terminal(self):
         tab = self.current_tab()
@@ -330,11 +418,14 @@ class TermWindow(Adw.ApplicationWindow):
         return GLib.SOURCE_REMOVE
 
     def current_tab(self):
+        """The active terminal of the tab in front."""
         page = self.tab_view.get_selected_page()
-        return page.get_child() if page else None
+        return page.get_child().active if page else None
 
     def tabs(self):
-        return [self.tab_view.get_nth_page(i).get_child() for i in range(self.tab_view.get_n_pages())]
+        """Every terminal, the split ones included."""
+        return [tab for i in range(self.tab_view.get_n_pages())
+                for tab in self.tab_view.get_nth_page(i).get_child().panes()]
 
     def on_n_pages(self, *_):
         if self.tab_view.get_n_pages() == 0:
@@ -371,7 +462,10 @@ class TermWindow(Adw.ApplicationWindow):
     def title_changed(self, tab):
         if not tab.is_ancestor(self.tab_view):
             return   # the tab is being moved to another window, it is brought up to date when it lands
-        self.show_title(self.tab_view.get_page(tab), tab)
+        split = split_of(tab)
+        if tab is not split.active:
+            return   # the tab bar shows the active terminal of a split tab
+        self.show_title(self.tab_view.get_page(split), tab)
         if tab is self.current_tab():
             self.set_titles(tab)
 
@@ -519,12 +613,12 @@ class TermWindow(Adw.ApplicationWindow):
             for widget in walk(self.overview):
                 if widget.get_css_name() == "tabthumbnail" and widget.get_mapped():
                     page = widget.get_property("page")
-                    if page is not None and page.get_child() is tab:
+                    if page is not None and page.get_child() is split_of(tab):
                         return widget
         for widget in walk(self.tab_bar):
             if widget.get_css_name() == "tab":
                 page = widget.get_property("page")
-                if page is not None and page.get_child() is tab and widget.get_mapped():
+                if page is not None and page.get_child() is split_of(tab) and widget.get_mapped():
                     return widget
         return self.header
 
@@ -544,7 +638,7 @@ class TermWindow(Adw.ApplicationWindow):
     def refresh(self):
         tab = self.current_tab()
         if tab is not None:
-            self.tab_view.get_page(tab).set_needs_attention(False)
+            self.tab_view.get_page(split_of(tab)).set_needs_attention(False)
         for state in STATES + CUSTOM_CLASSES + ("running",):
             self.remove_css_class(state)
         if tab is not None:
@@ -571,7 +665,8 @@ class TermWindow(Adw.ApplicationWindow):
                 for state in STATES + CUSTOM_CLASSES + ("running", "startup"):
                     widget.remove_css_class(state)
                 page = widget.get_property("page")
-                tab = page.get_child() if page else None
+                split = page.get_child() if page else None
+                tab = split.active if isinstance(split, SplitTab) else None
                 if isinstance(tab, TermTab) and tab.style_class():
                     widget.add_css_class(tab.style_class())
                 if isinstance(tab, TermTab) and tab.is_running():

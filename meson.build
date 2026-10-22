@@ -36,6 +36,7 @@ install_data(
   'velocitty/searchbar.py',
   'velocitty/shell.py',
   'velocitty/shortcuts.py',
+  'velocitty/split.py',
   'velocitty/tab.py',
   'velocitty/window.py',
   install_dir: python_module_dir,

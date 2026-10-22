@@ -92,6 +92,16 @@ class TermApp(Adw.Application):
             "win.main-menu": ["F10"],
             "win.last-tab": ["<Ctrl>End"],
             "win.shortcuts": ["<Ctrl><Shift>question"],
+            # Splits, as in Terminator
+            "win.split-right": ["<Ctrl><Shift>e"],
+            "win.split-down": ["<Ctrl><Shift>o"],
+            "win.focus-left": ["<Alt>Left"],
+            "win.focus-right": ["<Alt>Right"],
+            "win.focus-up": ["<Alt>Up"],
+            "win.focus-down": ["<Alt>Down"],
+            "win.focus-next": ["<Ctrl><Super>bracketright"],
+            "win.focus-previous": ["<Ctrl><Super>bracketleft"],
+            "win.equalize": ["<Ctrl><Alt>equal"],
         }.items():
             self.set_accels_for_action(action, accels)
 
@@ -145,7 +155,7 @@ class TermApp(Adw.Application):
         for window in windows:
             for tab in window.tabs():
                 if tab.is_clean_at(cwd):
-                    window.tab_view.set_selected_page(window.tab_view.get_page(tab))
+                    window.tab_view.set_selected_page(window.page_of(tab))
                     tab.terminal.grab_focus()
                     window.present()
                     return
@@ -208,7 +218,7 @@ class TermApp(Adw.Application):
         if "new-window" in options or front is None:
             tab = self.new_window(command, cwd).current_tab()
         elif command or title or "tab" in options:
-            tab = front.new_tab(command, cwd, at_end=True).get_child()
+            tab = front.new_tab(command, cwd, at_end=True).get_child().active
             front.present()
         elif startup_window is not None and "working-directory" not in options and (
                 not cwd or os.path.realpath(cwd) == os.path.realpath(GLib.get_home_dir())):
