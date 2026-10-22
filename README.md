@@ -100,6 +100,12 @@ The main menu moved from `F10` to `Ctrl+Shift+M`, so `F10` reaches Midnight Comm
 - Velocitty palettes have no cursor or selection color, so those parts of the Ghostty themes are not used.
 - `Alt+arrows` are taken by the splits. If your shell uses them, change them in `velocitty/application.py`.
 
+### Install
+
+Ready-made packages are in [Releases](https://github.com/emre-erim/velocitty/releases): a `.deb` for
+Ubuntu / Debian (libadwaita ≥ 1.8, VTE ≥ 0.78, e.g. Ubuntu 26.04) and a `.pkg.tar.zst` for Arch /
+CachyOS. They are built by GitHub Actions for every tag.
+
 ### Build on Arch / CachyOS
 
 ```

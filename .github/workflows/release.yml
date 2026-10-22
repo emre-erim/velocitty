@@ -1,0 +1,118 @@
+# Push a tag like v1.0.3+emre9 and this builds the Debian/Ubuntu and the Arch/CachyOS packages
+# and publishes them in a release for that tag.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to build and release (e.g. v1.0.3+emre9)"
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  deb:
+    name: Debian / Ubuntu package
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends debhelper dpkg-dev gettext \
+            libglib2.0-dev libgtk-4-bin meson ninja-build pkg-config python3
+      - name: Check that the version matches the tag
+        run: |
+          version="$(dpkg-parsechangelog -S Version)"
+          if [ "v$version" != "$TAG" ]; then
+            echo "::error::debian/changelog says $version, the tag is $TAG"
+            exit 1
+          fi
+      - name: Build
+        run: |
+          dpkg-buildpackage -us -uc -b
+          mkdir -p out && mv ../velocitty_*_all.deb out/
+          dpkg-parsechangelog -S Changes | tail -n +4 | sed 's/^  //' > out/changes.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deb
+          path: out/
+
+  arch:
+    name: Arch Linux / CachyOS package
+    runs-on: ubuntu-24.04
+    container: archlinux:latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - name: Install build tools
+        run: pacman -Syu --noconfirm --needed base-devel git meson ninja gettext glib2 pkgconf python
+      - name: Build
+        run: |
+          useradd -m builder
+          mkdir -p /home/builder/pkg
+          # The PKGBUILD builds the tag being released
+          pkgver="${TAG#v}"; pkgver="${pkgver//+/.}"
+          sed -e "s|^_tag=.*|_tag=${TAG}|" -e "s|^pkgver=.*|pkgver=${pkgver}|" \
+            packaging/arch/PKGBUILD > /home/builder/pkg/PKGBUILD
+          chown -R builder /home/builder/pkg
+          cd /home/builder/pkg
+          su builder -c "makepkg --nodeps --noconfirm"
+          mkdir -p "$GITHUB_WORKSPACE/out" && cp *.pkg.tar.zst "$GITHUB_WORKSPACE/out/"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: arch
+          path: out/
+
+  release:
+    name: Publish the release
+    needs: [deb, arch]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Write the notes
+        run: |
+          {
+            echo "> ⚠️ Experimental, personal, vibe-coded fork of [Velocitty](https://github.com/xapp-project/velocitty). Not affiliated with Linux Mint."
+            echo
+            echo "## What's new"
+            echo
+            cat dist/changes.txt
+            echo
+            echo "## Install"
+            echo
+            echo '**Ubuntu / Debian** (libadwaita ≥ 1.8, VTE ≥ 0.78, e.g. Ubuntu 26.04):'
+            echo '```'
+            echo "sudo apt install ./$(cd dist && ls *.deb)"
+            echo '```'
+            echo '**Arch / CachyOS:**'
+            echo '```'
+            echo "sudo pacman -U $(cd dist && ls *.pkg.tar.zst)"
+            echo '```'
+          } > notes.md
+          cat notes.md
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/*.deb dist/*.pkg.tar.zst --clobber
+            gh release edit "$TAG" --notes-file notes.md
+          else
+            gh release create "$TAG" dist/*.deb dist/*.pkg.tar.zst --prerelease \
+              --title "velocitty ${TAG#v}" --notes-file notes.md
+          fi
