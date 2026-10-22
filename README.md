@@ -60,10 +60,16 @@ terminals stay in view.
 
 ### More themes (from Ghostty)
 
-11 popular palettes, converted from the Ghostty themes in
-[mbadolato/iTerm2-Color-Schemes](https://github.com/mbadolato/iTerm2-Color-Schemes):
-12-bit Rainbow, Dracula, Gruvbox Dark, TokyoNight, Atom One Dark, Rose Pine, Kanagawa Wave,
-Everforest Dark Med, Night Owl, GitHub Dark Default and Ayu Mirage.
+25 popular palettes, converted from the Ghostty themes in
+[mbadolato/iTerm2-Color-Schemes](https://github.com/mbadolato/iTerm2-Color-Schemes), on top of the
+15 that come with Velocitty:
+
+12-bit Rainbow, Atom One, Ayu, Carbonfox, Catppuccin Macchiato, Cobalt2, Doom One, Dracula, Everforest,
+Flexoki, GitHub, Gruvbox, Iceberg, Kanagawa Wave, Material Ocean, Night Owl, Nightfox, Oceanic Next,
+One Half, Poimandres, Rose Pine, Snazzy, TokyoNight, Tomorrow and Vesper.
+
+Preferences has a **Themes** page with nothing but the palettes, and the font and spacing settings
+moved to a **Text** page of their own.
 
 ### Light and dark that always work
 
