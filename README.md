@@ -64,7 +64,8 @@ terminals stay in view.
 a narrow rail on the left holds one small square per tab with its number: the same number
 `Alt+1…9` goes to. A square takes its tab's color (custom, ssh, root), is shaded while a command
 runs and gets a dot when the tab needs attention. Hover for the full title, middle-click to close,
-right-click to customize, `+` at the bottom for a new tab.
+right-click to customize. When there are more tabs than fit, an arrow at the top or bottom says how
+many are hidden there and scrolls to them, and the tab in front is always scrolled into view.
 
 ### More themes (from Ghostty)
 

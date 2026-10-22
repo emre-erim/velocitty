@@ -44,7 +44,7 @@ class TabSquare(Gtk.Button):
             self.page.disconnect(handler)
 
     def update(self):
-        position = self.rail.view.get_page_position(self.page)
+        position = self.rail.position_of(self.page)
         self.number.set_label(str(position + 1) if position >= 0 else "")
         tooltip = self.page.get_tooltip() or GLib.markup_escape_text(self.page.get_title() or "")
         if 0 <= position < 10:
@@ -73,20 +73,92 @@ class TabRail(Gtk.Box):
         self.view = window.tab_view
         self.squares = []
 
-        self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, margin_top=8, margin_bottom=8)
-        scroller = Gtk.ScrolledWindow(child=self.box, vexpand=True, hscrollbar_policy=Gtk.PolicyType.NEVER,
-                                      vscrollbar_policy=Gtk.PolicyType.EXTERNAL)
-        new_tab = Gtk.Button(icon_name="xsi-tab-new-symbolic", css_classes=["vtab", "vtab-new"],
-                             action_name="win.new-tab", tooltip_text=_("New Tab"), can_focus=False,
-                             halign=Gtk.Align.CENTER, margin_bottom=8)
-        self.append(scroller)
-        self.append(new_tab)
+        self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, margin_top=4, margin_bottom=4)
+        self.scroller = Gtk.ScrolledWindow(child=self.box, vexpand=True, hscrollbar_policy=Gtk.PolicyType.NEVER,
+                                           vscrollbar_policy=Gtk.PolicyType.EXTERNAL)
+        self.adjustment = self.scroller.get_vadjustment()
+        self.adjustment.connect("value-changed", lambda *_: self.update_arrows())
+        self.adjustment.connect("changed", lambda *_: self.update_arrows())
+
+        # When the squares don't all fit, an arrow at each end says how many are hidden there
+        self.up = self.arrow("xsi-go-up-symbolic", -1)
+        self.down = self.arrow("xsi-go-down-symbolic", 1)
+        self.append(self.up)
+        self.append(self.scroller)
+        self.append(self.down)
 
         # The tab view keeps no reference to this model: without one here it goes, and its signals with it
         self.pages = self.view.get_pages()
         self.pages.connect("items-changed", lambda *_: GLib.idle_add(self.rebuild))
-        self.pages.connect("selection-changed", lambda *_: self.window.queue_restyle())
+        self.pages.connect("selection-changed", lambda *_: self.on_selection_changed())
         self.rebuild()
+
+    def arrow(self, icon, direction):
+        count = Gtk.Label(css_classes=["vtab-hidden-count"])
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, halign=Gtk.Align.CENTER)
+        if direction < 0:
+            box.append(Gtk.Image(icon_name=icon))
+            box.append(count)
+        else:
+            box.append(count)
+            box.append(Gtk.Image(icon_name=icon))
+        button = Gtk.Button(child=box, css_classes=["vtab-arrow", "flat"], can_focus=False,
+                            halign=Gtk.Align.CENTER, visible=False)
+        button.count = count
+        button.connect("clicked", lambda *_: self.scroll_by(direction))
+        return button
+
+    def position_of(self, page):
+        """The page's position, or -1 when it has left the view (it is being closed or moved):
+        asking the view about such a page is an error."""
+        for i in range(self.view.get_n_pages()):
+            if self.view.get_nth_page(i) is page:
+                return i
+        return -1
+
+    def square_bounds(self, square):
+        ok, bounds = square.compute_bounds(self.box)
+        return (bounds.get_y(), bounds.get_y() + bounds.get_height()) if ok else None
+
+    def update_arrows(self):
+        top = self.adjustment.get_value()
+        bottom = top + self.adjustment.get_page_size()
+        above = below = 0
+        for square in self.squares:
+            bounds = self.square_bounds(square)
+            if bounds is None:
+                continue
+            if bounds[1] <= top + 4:
+                above += 1
+            elif bounds[0] >= bottom - 4:
+                below += 1
+        for button, hidden in ((self.up, above), (self.down, below)):
+            button.set_visible(hidden > 0)
+            button.count.set_label(str(hidden))
+            button.set_tooltip_text(_("%d more tabs") % hidden if hidden != 1 else _("1 more tab"))
+
+    def scroll_by(self, direction):
+        step = max(self.adjustment.get_page_size() - 44, 44)
+        self.adjustment.set_value(self.adjustment.get_value() + direction * step)
+
+    def on_selection_changed(self):
+        self.window.queue_restyle()
+        GLib.idle_add(self.show_selected)
+
+    def show_selected(self):
+        """Scroll the square of the tab in front into view."""
+        selected = self.view.get_selected_page()
+        square = next((s for s in self.squares if s.page is selected), None)
+        bounds = self.square_bounds(square) if square else None
+        if bounds is not None:
+            top = self.adjustment.get_value()
+            bottom = top + self.adjustment.get_page_size()
+            if bounds[0] < top:
+                self.adjustment.set_value(bounds[0] - 4)
+            elif bounds[1] > bottom:
+                self.adjustment.set_value(bounds[1] - self.adjustment.get_page_size() + 4)
+        self.update_arrows()
+        return GLib.SOURCE_REMOVE
 
     def rebuild(self):
         for square in self.squares:
@@ -99,4 +171,5 @@ class TabRail(Gtk.Box):
             self.squares.append(square)
             square.update()
         self.window.queue_restyle()
+        GLib.idle_add(self.show_selected)
         return GLib.SOURCE_REMOVE

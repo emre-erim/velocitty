@@ -392,7 +392,7 @@ class TermWindow(Adw.ApplicationWindow):
     def switch_to_previous(self):
         """Back to the tab that was in front before this one, to go back and forth between two."""
         page = self.previous_page
-        if page is not None and page.get_child() is not None and self.tab_view.get_page_position(page) >= 0:
+        if page is not None and page.get_child() is not None and self.rail.position_of(page) >= 0:
             self.tab_view.set_selected_page(page)
 
     def close_tab(self, tab):
