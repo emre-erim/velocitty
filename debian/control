@@ -23,7 +23,7 @@ Depends:
  python3,
  python3-gi,
  python3-setproctitle,
-Recommends: xapp-symbolic-icons
+Recommends: xapp-symbolic-icons, openssh-client
 Provides: x-terminal-emulator
 Description: Terminal emulator for Linux desktops
  An easy-to-use terminal emulator.

@@ -1,3 +1,11 @@
+velocitty (1.0.3+emre2) resolute; urgency=medium
+
+  * SSH address book: saved hosts and ~/.ssh/config, search, quick connect
+    (Ctrl+Shift+R)
+  * Vertical tabs in a sidebar (main menu or Preferences)
+
+ -- Emre <emre.erim@gmail.com>  Thu, 22 Oct 2026 15:51:24 -0000
+
 velocitty (1.0.3+emre1) resolute; urgency=medium
 
   * Experimental fork by Emre: https://github.com/emre-erim/velocitty
