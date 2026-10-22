@@ -98,20 +98,23 @@ class Preferences(Adw.Window):
                                          action=Gtk.CallbackAction.new(self.on_escape)))
         self.add_controller(escape)
 
-        page = Adw.PreferencesPage(title=_("Appearance"), icon_name="xsi-appearance-symbolic")
-        
-        group = Adw.PreferencesGroup(title=_("Palette"))
+        # The themes have a page of their own, there are many of them
+        page = Adw.PreferencesPage(title=_("Themes"), icon_name="xsi-appearance-symbolic")
+        group = Adw.PreferencesGroup()
         group.add(self.palette_chooser(settings))
         page.add(group)
+        self.add_page(page, "themes")
 
-        group = Adw.PreferencesGroup(title=_("Text"))
+        page = Adw.PreferencesPage(title=_("Text"), icon_name="xsi-font-x-generic-symbolic")
+        group = Adw.PreferencesGroup(title=_("Font"))
         group.add(self.font_row(settings))
+        page.add(group)
+        group = Adw.PreferencesGroup(title=_("Spacing and Colors"))
         group.add(spin_double_row(settings, "line-spacing", _("Line Spacing"), 1.0, 2.0, 0.1))
         group.add(spin_double_row(settings, "column-spacing", _("Column Spacing"), 1.0, 2.0, 0.1))
         group.add(switch_row(settings, "bold-is-bright", _("Bright Colors for Bold")))
         page.add(group)
-
-        self.add_page(page, "appearance")
+        self.add_page(page, "text")
 
         page = Adw.PreferencesPage(title=_("Windows and Tabs"), icon_name="xsi-tab-new-symbolic")
         group = Adw.PreferencesGroup(title=_("Windows"))

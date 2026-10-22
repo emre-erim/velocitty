@@ -7,7 +7,7 @@ import os
 from gi.repository import GLib, Gtk
 
 ICONS = [
-    "appearance", "computer", "edit-clear", "emblem-system", "go-down", "go-next", "go-up",
+    "appearance", "computer", "edit-clear", "font-x-generic", "emblem-system", "go-down", "go-next", "go-up",
     "input-mouse", "list-drag-handle", "open-menu", "pan-up", "tab-new", "user-bookmarks",
     "utilities-terminal", "view-restore", "weather-clear-night", "weather-clear", "window-close",
     "zoom-in", "zoom-out",
