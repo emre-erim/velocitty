@@ -1,3 +1,11 @@
+velocitty (1.0.3+emre9) resolute; urgency=medium
+
+  * Vertical tabs: arrows with the number of hidden tabs when they don't
+    all fit, the tab in front is scrolled into view, no + at the bottom
+  * Fix Adwaita-CRITICAL warnings when tabs are closed
+
+ -- Emre <emre.erim@gmail.com>  Thu, 22 Oct 2026 22:38:59 -0000
+
 velocitty (1.0.3+emre8) resolute; urgency=medium
 
   * Vertical tabs are back, as a narrow rail of numbered squares that take
