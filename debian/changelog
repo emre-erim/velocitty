@@ -1,3 +1,9 @@
+velocitty (1.0.3+emre7) resolute; urgency=medium
+
+  * Fix: editing a server with a saved password failed to open the dialog
+
+ -- Emre <emre.erim@gmail.com>  Thu, 22 Oct 2026 22:24:34 -0000
+
 velocitty (1.0.3+emre6) resolute; urgency=medium
 
   * 14 more palettes from Ghostty themes, 25 in all: Catppuccin Macchiato,
