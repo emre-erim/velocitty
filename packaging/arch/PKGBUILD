@@ -1,0 +1,28 @@
+# Maintainer: Emre <emre.erim@gmail.com>
+# Experimental fork of Linux Mint's Velocitty: splits, Ghostty themes, working light/dark.
+pkgname=velocitty-emre
+_tag=v1.0.3+emre1
+pkgver=1.0.3.emre1
+pkgrel=1
+pkgdesc="Velocitty terminal, experimental fork with Terminator/Ghostty style splits and themes"
+arch=('any')
+url="https://github.com/emre-erim/velocitty"
+license=('GPL-3.0-or-later')
+depends=('gtk4' 'libadwaita' 'vte4' 'python' 'python-gobject' 'python-setproctitle')
+makedepends=('git' 'meson' 'ninja' 'gettext' 'glib2' 'pkgconf')
+optdepends=('xapp-symbolic-icons: the original icons (the system icon theme is used without it)'
+            'python-xapp: shared translation helper (a built-in copy is used without it)')
+provides=('velocitty')
+conflicts=('velocitty' 'velocitty-git')
+source=("velocitty::git+https://github.com/emre-erim/velocitty.git#tag=${_tag}")
+sha256sums=('SKIP')
+
+build() {
+  arch-meson velocitty build
+  meson compile -C build
+}
+
+package() {
+  meson install -C build --destdir "$pkgdir"
+  install -Dm644 velocitty/README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}
