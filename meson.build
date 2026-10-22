@@ -1,4 +1,4 @@
-project('velocitty', version : '1.0.3+emre10', meson_version : '>= 0.59.0')
+project('velocitty', version : '1.0.3+emre11', meson_version : '>= 0.59.0')
 
 prefix = get_option('prefix')
 datadir = get_option('datadir')

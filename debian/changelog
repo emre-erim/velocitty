@@ -1,3 +1,11 @@
+velocitty (1.0.3+emre11) resolute; urgency=medium
+
+  * Without xapp-symbolic-icons, the stand-in icons are colored like the
+    text again: they were dark gray, hard to see on a dark headerbar
+  * Screenshots in the README
+
+ -- Emre <emre.erim@gmail.com>  Thu, 22 Oct 2026 23:45:54 -0000
+
 velocitty (1.0.3+emre10) resolute; urgency=medium
 
   * Vertical tabs: the arrows are shown or hidden after the rail is laid
