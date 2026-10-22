@@ -509,6 +509,8 @@ class TermWindow(Adw.ApplicationWindow):
             tab.apply_colors(self.app.scheme())
 
     def apply_tab_layout(self):
+        if not hasattr(self, "rail"):
+            return   # a setting changed while the window is being made: it is applied at the end
         vertical = self.app.settings.get_boolean("vertical-tabs")
         if self.rail.get_visible() != vertical:
             quiet = GLib.get_monotonic_time() + 500000   # the terminals change size, not a resize to show

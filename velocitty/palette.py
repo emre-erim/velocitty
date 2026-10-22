@@ -265,7 +265,7 @@ window.terminal .vtabs button.vtab {
 window.terminal .vtabs button.vtab:hover { background-color: alpha($tf, 0.14); }
 window.terminal .vtabs button.vtab.selected { box-shadow: inset 0 0 0 2px $tf; }
 window.terminal .vtabs button.vtab.selected .vtab-number { font-size: 1.15em; }
-window.terminal .vtabs button.vtab-arrow { min-width: 38px; padding: 4px 0; margin: 4px 0; border-radius: 10px;
+window.terminal .vtabs button.vtab-arrow { min-width: 38px; padding: 4px 0; border-radius: 10px;
     color: $tf; background-color: alpha($tf, 0.10); }
 window.terminal .vtabs button.vtab-arrow:hover { background-color: alpha($tf, 0.18); }
 window.terminal .vtabs .vtab-hidden-count { font-size: 0.8em; font-weight: 700; font-feature-settings: "tnum"; }

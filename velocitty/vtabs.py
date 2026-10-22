@@ -77,8 +77,11 @@ class TabRail(Gtk.Box):
         self.scroller = Gtk.ScrolledWindow(child=self.box, vexpand=True, hscrollbar_policy=Gtk.PolicyType.NEVER,
                                            vscrollbar_policy=Gtk.PolicyType.EXTERNAL)
         self.adjustment = self.scroller.get_vadjustment()
-        self.adjustment.connect("value-changed", lambda *_: self.update_arrows())
-        self.adjustment.connect("changed", lambda *_: self.update_arrows())
+        # The adjustment changes while the rail is being laid out: showing or hiding an arrow
+        # then would change the children of a box in the middle of its allocation
+        self.arrows_queued = False
+        self.adjustment.connect("value-changed", lambda *_: self.queue_arrows())
+        self.adjustment.connect("changed", lambda *_: self.queue_arrows())
 
         # When the squares don't all fit, an arrow at each end says how many are hidden there
         self.up = self.arrow("xsi-go-up-symbolic", -1)
@@ -103,7 +106,7 @@ class TabRail(Gtk.Box):
             box.append(count)
             box.append(Gtk.Image(icon_name=icon))
         button = Gtk.Button(child=box, css_classes=["vtab-arrow", "flat"], can_focus=False,
-                            halign=Gtk.Align.CENTER, visible=False)
+                            halign=Gtk.Align.CENTER, visible=False, margin_top=4, margin_bottom=4)
         button.count = count
         button.connect("clicked", lambda *_: self.scroll_by(direction))
         return button
@@ -120,7 +123,13 @@ class TabRail(Gtk.Box):
         ok, bounds = square.compute_bounds(self.box)
         return (bounds.get_y(), bounds.get_y() + bounds.get_height()) if ok else None
 
+    def queue_arrows(self):
+        if not self.arrows_queued:
+            self.arrows_queued = True
+            GLib.idle_add(self.update_arrows)
+
     def update_arrows(self):
+        self.arrows_queued = False
         top = self.adjustment.get_value()
         bottom = top + self.adjustment.get_page_size()
         above = below = 0
@@ -133,9 +142,12 @@ class TabRail(Gtk.Box):
             elif bounds[0] >= bottom - 4:
                 below += 1
         for button, hidden in ((self.up, above), (self.down, below)):
-            button.set_visible(hidden > 0)
-            button.count.set_label(str(hidden))
-            button.set_tooltip_text(_("%d more tabs") % hidden if hidden != 1 else _("1 more tab"))
+            if button.get_visible() != (hidden > 0):
+                button.set_visible(hidden > 0)
+            if button.count.get_label() != str(hidden):
+                button.count.set_label(str(hidden))
+                button.set_tooltip_text(_("%d more tabs") % hidden if hidden != 1 else _("1 more tab"))
+        return GLib.SOURCE_REMOVE
 
     def scroll_by(self, direction):
         step = max(self.adjustment.get_page_size() - 44, 44)
@@ -157,7 +169,7 @@ class TabRail(Gtk.Box):
                 self.adjustment.set_value(bounds[0] - 4)
             elif bounds[1] > bottom:
                 self.adjustment.set_value(bounds[1] - self.adjustment.get_page_size() + 4)
-        self.update_arrows()
+        self.queue_arrows()
         return GLib.SOURCE_REMOVE
 
     def rebuild(self):
