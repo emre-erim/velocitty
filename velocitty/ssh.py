@@ -1,4 +1,4 @@
-"""The SSH address book: hosts saved here, and the hosts of ~/.ssh/config, to open in a new tab."""
+"""The SSH address book: hosts saved here and the hosts of ~/.ssh/config, in a panel beside the terminals."""
 
 import glob
 import json
@@ -9,7 +9,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, GLib, GObject, Gtk
+from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk, Pango
 
 from velocitty import GETTEXT_DOMAIN
 from velocitty.i18n import l10n
@@ -144,38 +144,188 @@ class SshHosts(GObject.Object):
 
 # -- the page --------------------------------------------------------------
 
-class SshPage(Adw.NavigationPage):
-    """The address book: search, connect, add, edit and remove hosts."""
+# -- the panel -------------------------------------------------------------
+
+def parse_address(text):
+    """"user@host:port" (any part but the host can be left out) into its parts."""
+    text = text.strip()
+    user, _at, rest = text.rpartition("@")
+    host, port = rest, ""
+    if rest.startswith("["):   # [ipv6]:port
+        end = rest.find("]")
+        host, port = rest[1:end], rest[end + 2:] if rest[end + 1:end + 2] == ":" else ""
+    elif rest.count(":") == 1:
+        host, port = rest.split(":")
+    return user, host, port
+
+
+def join_address(host):
+    text = host.get("host") or ""
+    if ":" in text:
+        text = "[%s]" % text
+    if host.get("user"):
+        text = host["user"] + "@" + text
+    if host.get("port") and str(host["port"]) != "22":
+        text += ":%s" % host["port"]
+    return text
+
+
+class HostRow(Gtk.ListBoxRow):
+    """A host: click connects. The ⋮ button and right click give the other choices."""
+
+    def __init__(self, panel, host):
+        super().__init__(css_classes=["ssh-host"])
+        self.host = host
+        saved = host.get("saved") is not None
+
+        title = Gtk.Label(label=host["name"], xalign=0, css_classes=["ssh-host-name"],
+                          ellipsize=Pango.EllipsizeMode.END)
+        subtitle = address_of(host)
+        if host.get("alias") and host.get("host") != host.get("alias"):
+            subtitle = "%s · %s" % (host["alias"], subtitle)
+        address = Gtk.Label(label=subtitle, xalign=0, css_classes=["dim-label", "caption"],
+                            ellipsize=Pango.EllipsizeMode.MIDDLE)
+        text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, hexpand=True, valign=Gtk.Align.CENTER)
+        text.append(title)
+        text.append(address)
+
+        # "Connect →" shows while the pointer is over the row, so it is clear what a click does
+        hint = Gtk.Label(label=_("Connect") + " →", css_classes=["ssh-connect-hint", "caption"])
+        self.hint = Gtk.Revealer(child=hint, transition_type=Gtk.RevealerTransitionType.SLIDE_LEFT,
+                                 valign=Gtk.Align.CENTER)
+
+        actions = Gio.SimpleActionGroup()
+        for name, handler in (("connect", lambda: panel.connect_to(host)),
+                              ("split", lambda: panel.connect_to(host, split=True)),
+                              ("edit", lambda: panel.edit(host["saved"])),
+                              ("remove", lambda: panel.confirm_remove(host["saved"])),
+                              ("save", lambda: panel.edit(None, template=host)),
+                              ("copy", lambda: panel.copy_command(host))):
+            action = Gio.SimpleAction.new(name, None)
+            action.connect("activate", lambda _a, _p, h=handler: h())
+            actions.add_action(action)
+        self.insert_action_group("host", actions)
+
+        menu = Gio.Menu()
+        section = Gio.Menu()
+        section.append(_("Connect in a New Tab"), "host.connect")
+        section.append(_("Connect in a Split"), "host.split")
+        section.append(_("Copy the ssh Command"), "host.copy")
+        menu.append_section(None, section)
+        section = Gio.Menu()
+        if saved:
+            section.append(_("Edit…"), "host.edit")
+            section.append(_("Remove"), "host.remove")
+        else:
+            section.append(_("Save to the Address Book…"), "host.save")
+        menu.append_section(None, section)
+        self.menu = menu
+        more = Gtk.MenuButton(icon_name="view-more-symbolic", menu_model=menu, valign=Gtk.Align.CENTER,
+                              css_classes=["flat", "circular"], tooltip_text=_("More"))
+
+        box = Gtk.Box(spacing=10, margin_start=10, margin_end=4, margin_top=6, margin_bottom=6)
+        box.append(Gtk.Image(icon_name="network-server-symbolic", css_classes=["dim-label"]))
+        box.append(text)
+        box.append(self.hint)
+        box.append(more)
+        self.set_child(box)
+        self.set_tooltip_text(_("Click to connect to %s") % address_of(host))
+
+        motion = Gtk.EventControllerMotion()
+        motion.connect("enter", lambda *_: self.hint.set_reveal_child(True))
+        motion.connect("leave", lambda *_: self.hint.set_reveal_child(False))
+        self.add_controller(motion)
+        click = Gtk.GestureClick(button=3)
+        click.connect("pressed", self.on_right_click)
+        self.add_controller(click)
+
+    def on_right_click(self, gesture, n_press, x, y):
+        gesture.set_state(Gtk.EventSequenceState.CLAIMED)
+        popover = Gtk.PopoverMenu.new_from_model(self.menu)
+        popover.set_parent(self)
+        popover.set_has_arrow(False)
+        rect = Gdk.Rectangle()
+        rect.x, rect.y, rect.width, rect.height = int(x), int(y), 1, 1
+        popover.set_pointing_to(rect)
+        popover.connect("closed", lambda p: GLib.idle_add(p.unparent))
+        popover.popup()
+
+
+class QuickRow(Gtk.ListBoxRow):
+    """Connect to what was typed, when it is not a saved host."""
+
+    def __init__(self, text):
+        super().__init__(css_classes=["ssh-host", "ssh-quick"])
+        self.text = text
+        label = Gtk.Label(xalign=0, hexpand=True, ellipsize=Pango.EllipsizeMode.END, use_markup=True,
+                          label=_("Connect to %s") % ("<b>%s</b>" % GLib.markup_escape_text(text)))
+        box = Gtk.Box(spacing=10, margin_start=10, margin_end=10, margin_top=10, margin_bottom=10)
+        box.append(Gtk.Image(icon_name="go-next-symbolic"))
+        box.append(label)
+        box.append(Gtk.Label(label="Enter ↵", css_classes=["dim-label", "caption"]))
+        self.set_child(box)
+
+
+class SshPanel(Gtk.Box):
+    """The address book, in a panel on the right of the terminals."""
 
     def __init__(self, window):
-        super().__init__(title=_("SSH Hosts"), tag="ssh-hosts")
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, css_classes=["ssh-panel"])
         self.window = window
         self.hosts = window.app.ssh_hosts
-        self.matching = []   # the hosts that match the search, in order
 
-        self.search = Gtk.SearchEntry(placeholder_text=_("Search, or type user@host to connect"),
-                                      hexpand=True)
+        title = Gtk.Label(label=_("SSH Servers"), xalign=0, hexpand=True, css_classes=["heading"])
+        close = Gtk.Button(icon_name="window-close-symbolic", css_classes=["flat", "circular"],
+                           tooltip_text=_("Close") + " (Esc)")
+        close.connect("clicked", lambda *_: self.window.show_ssh_panel(False))
+        top = Gtk.Box(spacing=6, margin_start=12, margin_end=6, margin_top=6)
+        top.append(title)
+        top.append(close)
+
+        self.search = Gtk.SearchEntry(placeholder_text=_("Search, or type user@host"),
+                                      margin_start=8, margin_end=8, margin_top=6, margin_bottom=6)
         self.search.connect("search-changed", lambda *_: self.refresh())
-        self.search.connect("activate", self.on_activate)
-        self.search.connect("stop-search", lambda *_: self.window.nav.pop())
+        self.search.connect("activate", lambda *_: self.activate_first())
+        self.search.connect("stop-search", lambda *_: self.window.show_ssh_panel(False))
+        # Down from the search box goes to the list
+        keys = Gtk.EventControllerKey()
+        keys.connect("key-pressed", self.on_search_key)
+        self.search.add_controller(keys)
 
-        self.content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18)
-        clamp = Adw.Clamp(maximum_size=720, child=self.content, margin_top=12, margin_bottom=24,
-                          margin_start=12, margin_end=12, valign=Gtk.Align.START)
-        scroller = Gtk.ScrolledWindow(child=clamp, vexpand=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
+        self.list = Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE, css_classes=["ssh-list"])
+        self.list.set_header_func(self.header_for)
+        self.list.connect("row-activated", self.on_row_activated)
+        self.empty = Adw.StatusPage(icon_name="network-server-symbolic", title=_("No Servers Yet"),
+                                    description=_("Save your servers here and connect with one click.\n"
+                                                  "Hosts in ~/.ssh/config show up here by themselves."),
+                                    css_classes=["compact"], vexpand=True)
+        first = Gtk.Button(label=_("Add Your First Server"), halign=Gtk.Align.CENTER,
+                           css_classes=["suggested-action", "pill"])
+        first.connect("clicked", lambda *_: self.edit(None))
+        self.empty.set_child(first)
+        self.stack = Gtk.Stack()
+        self.stack.add_named(Gtk.ScrolledWindow(child=self.list, vexpand=True,
+                                                hscrollbar_policy=Gtk.PolicyType.NEVER), "list")
+        self.stack.add_named(self.empty, "empty")
 
-        header = Adw.HeaderBar(title_widget=Adw.Clamp(maximum_size=480, child=self.search))
-        add = Gtk.Button(icon_name="list-add-symbolic", tooltip_text=_("Add Host"))
+        add = Gtk.Button(child=Adw.ButtonContent(icon_name="list-add-symbolic", label=_("Add Server")),
+                         css_classes=["suggested-action"], margin_start=8, margin_end=8, margin_top=6,
+                         margin_bottom=8)
         add.connect("clicked", lambda *_: self.edit(None))
-        header.pack_end(add)
 
-        view = Adw.ToolbarView(content=scroller, css_classes=["custom-tabs"])
-        view.add_top_bar(header)
-        self.set_child(view)
+        self.append(top)
+        self.append(self.search)
+        self.append(self.stack)
+        self.append(add)
         self.hosts.connect("changed", lambda *_: self.refresh())
-        self.connect("shown", lambda *_: self.on_shown())
+        escape = Gtk.EventControllerKey()
+        escape.connect("key-pressed", lambda c, keyval, *_: keyval == Gdk.KEY_Escape
+                       and (self.window.show_ssh_panel(False) or True))
+        self.add_controller(escape)
 
-    def on_shown(self):
+    # -- showing -----------------------------------------------------------
+
+    def opened(self):
         self.search.set_text("")
         self.refresh()
         self.search.grab_focus()
@@ -185,72 +335,70 @@ class SshPage(Adw.NavigationPage):
         names = {entry["name"] for entry in self.hosts.entries}
         return saved + [host for host in read_ssh_config() if host["name"] not in names]
 
-    def matches(self, host, words):
-        text = " ".join(str(host.get(key) or "") for key in ("name", "host", "user", "group", "alias")).lower()
-        return all(word in text for word in words)
-
     def refresh(self):
-        while (child := self.content.get_first_child()) is not None:
-            self.content.remove(child)
-        words = self.search.get_text().lower().split()
-        self.matching = [host for host in self.all_hosts() if self.matches(host, words)]
-
-        groups = {}
-        for host in self.matching:
-            groups.setdefault(host.get("group") or _("Hosts"), []).append(host)
-        for name in sorted(groups, key=lambda g: (g == _("SSH Config"), g.lower())):
-            group = Adw.PreferencesGroup(title=GLib.markup_escape_text(name))
-            for host in sorted(groups[name], key=lambda h: h["name"].lower()):
-                group.add(self.build_row(host))
-            self.content.append(group)
-
+        while (row := self.list.get_first_child()) is not None:
+            self.list.remove(row)
         text = self.search.get_text().strip()
-        if not self.matching:
-            if text:
-                hint = _("Press Enter to connect to %s") % text
-            else:
-                hint = _("No hosts yet. Add one with +, or put them in ~/.ssh/config.")
-            self.content.append(Adw.StatusPage(icon_name="network-server-symbolic", title=_("SSH Hosts"),
-                                               description=GLib.markup_escape_text(hint)))
+        words = text.lower().split()
+        everything = self.all_hosts()
+        matching = [host for host in everything
+                    if all(word in " ".join(str(host.get(k) or "") for k in
+                                            ("name", "host", "user", "group", "alias")).lower()
+                           for word in words)]
+        if not everything and not text:
+            self.stack.set_visible_child_name("empty")
+            return
+        self.stack.set_visible_child_name("list")
+        # What was typed can always be connected to, unless it is exactly a host of the list
+        if text and not any(text in (h["name"], h.get("alias"), join_address(h)) for h in matching):
+            self.list.append(QuickRow(text))
+        order = lambda h: (h.get("group") == _("SSH Config"), (h.get("group") or "").lower(), h["name"].lower())
+        for host in sorted(matching, key=order):
+            self.list.append(HostRow(self, host))
 
-    def build_row(self, host):
-        subtitle = address_of(host)
-        if host.get("alias") and host.get("host") != host.get("alias"):
-            subtitle = "%s → %s" % (host["alias"], subtitle)
-        row = Adw.ActionRow(title=GLib.markup_escape_text(host["name"]),
-                            subtitle=GLib.markup_escape_text(subtitle), activatable=True)
-        row.add_prefix(Gtk.Image(icon_name="network-server-symbolic"))
-        row.connect("activated", lambda *_: self.connect_to(host))
-        if host.get("saved") is not None:
-            edit = Gtk.Button(icon_name="document-edit-symbolic", valign=Gtk.Align.CENTER,
-                              css_classes=["flat", "circular"], tooltip_text=_("Edit"))
-            edit.connect("clicked", lambda *_: self.edit(host["saved"]))
-            row.add_suffix(edit)
-            remove = Gtk.Button(icon_name="user-trash-symbolic", valign=Gtk.Align.CENTER,
-                                css_classes=["flat", "circular"], tooltip_text=_("Remove"))
-            remove.connect("clicked", lambda *_: self.confirm_remove(host["saved"]))
-            row.add_suffix(remove)
+    def header_for(self, row, before):
+        group = row.host.get("group") or _("Servers") if isinstance(row, HostRow) else None
+        previous = (before.host.get("group") or _("Servers")) if isinstance(before, HostRow) else None
+        if group is not None and group != previous:
+            if group == _("SSH Config"):
+                group = "~/.ssh/config"
+            row.set_header(Gtk.Label(label=group.upper(), xalign=0, css_classes=["ssh-group", "caption-heading"],
+                                     margin_start=12, margin_top=10, margin_bottom=2))
         else:
-            copy = Gtk.Button(icon_name="list-add-symbolic", valign=Gtk.Align.CENTER,
-                              css_classes=["flat", "circular"], tooltip_text=_("Save to the Address Book"))
-            copy.connect("clicked", lambda *_: self.edit(None, template=host))
-            row.add_suffix(copy)
-        return row
+            row.set_header(None)
 
-    def on_activate(self, entry):
-        text = entry.get_text().strip()
-        if len(self.matching) == 1:
-            self.connect_to(self.matching[0])
-        elif not self.matching and text:
-            # Quick connect: anything ssh understands, like user@host or host -p 2222
-            self.window.open_ssh(_("SSH") + " " + text.split()[0], "ssh " + text)
+    def activate_first(self):
+        row = self.list.get_row_at_index(0)
+        if row is not None:
+            self.on_row_activated(self.list, row)
 
-    def connect_to(self, host):
-        self.window.open_ssh(host["name"], command_for(host))
+    def on_search_key(self, controller, keyval, keycode, state):
+        if keyval == Gdk.KEY_Down:
+            row = self.list.get_row_at_index(0)
+            if row is not None:
+                row.grab_focus()
+                return True
+        return False
+
+    def on_row_activated(self, listbox, row):
+        if isinstance(row, QuickRow):
+            self.window.open_ssh(row.text.split()[0], "ssh " + row.text)
+            self.window.show_ssh_panel(False)
+        elif isinstance(row, HostRow):
+            self.connect_to(row.host)
+
+    # -- actions -----------------------------------------------------------
+
+    def connect_to(self, host, split=False):
+        self.window.open_ssh(host["name"], command_for(host), split=split)
+        self.window.show_ssh_panel(False)
+
+    def copy_command(self, host):
+        self.get_clipboard().set(command_for(host))
 
     def confirm_remove(self, entry):
         dialog = Adw.AlertDialog(heading=_("Remove %s?") % entry["name"],
-                                 body=_("It is removed from the address book only."))
+                                 body=_("It is only removed from the address book."))
         dialog.add_response("cancel", _("_Cancel"))
         dialog.add_response("remove", _("_Remove"))
         dialog.set_response_appearance("remove", Adw.ResponseAppearance.DESTRUCTIVE)
@@ -263,37 +411,40 @@ class SshPage(Adw.NavigationPage):
 
 
 class HostDialog(Adw.Dialog):
-    """Add a host, or edit one."""
+    """Add a server, or edit one: an address and a name are all that is needed."""
 
     def __init__(self, hosts, entry, template=None):
-        super().__init__(title=_("Edit Host") if entry else _("Add Host"), content_width=460)
+        super().__init__(title=_("Edit Server") if entry else _("Add Server"), content_width=440)
         self.hosts, self.entry = hosts, entry
-        values = dict(entry or {})
+        values = dict(template or entry or {})
         if template:
-            values = {"name": template.get("name", ""), "host": template.get("host", ""),
-                      "user": template.get("user", ""), "port": template.get("port", ""),
-                      "group": ""}
+            values = {key: template.get(key, "") for key in ("name", "host", "user", "port")}
 
-        self.rows = {}
-        group = Adw.PreferencesGroup()
-        for key, title in (("name", _("Name")), ("host", _("Host")), ("user", _("User")),
-                           ("port", _("Port")), ("group", _("Group"))):
-            row = Adw.EntryRow(title=title, text=str(values.get(key) or ""))
-            row.connect("changed", lambda *_: self.validate())
-            self.rows[key] = row
-            group.add(row)
-        advanced = Adw.PreferencesGroup(title=_("Advanced"))
-        key_row = Adw.EntryRow(title=_("Key File"), text=values.get("key") or "")
-        browse = Gtk.Button(icon_name="folder-open-symbolic", valign=Gtk.Align.CENTER,
-                            css_classes=["flat"], tooltip_text=_("Choose a Key File"))
+        main = Adw.PreferencesGroup()
+        self.address = Adw.EntryRow(title=_("Address (user@host or user@host:port)"),
+                                    text=join_address(values) if values.get("host") else "")
+        self.address.connect("changed", lambda *_: self.validate())
+        self.address.connect("entry-activated", lambda *_: self.save())
+        self.name = Adw.EntryRow(title=_("Name (optional)"), text=values.get("name") or "")
+        self.name.connect("entry-activated", lambda *_: self.save())
+        self.group = Adw.EntryRow(title=_("Group (optional)"), text=values.get("group") or "")
+        self.group.connect("entry-activated", lambda *_: self.save())
+        for row in (self.address, self.name, self.group):
+            main.add(row)
+
+        more = Adw.PreferencesGroup()
+        advanced = Adw.ExpanderRow(title=_("Advanced"), subtitle=_("Key file, jump host and other ssh options"),
+                                   expanded=bool(values.get("key") or values.get("options")))
+        self.key = Adw.EntryRow(title=_("Key File"), text=values.get("key") or "")
+        browse = Gtk.Button(icon_name="folder-open-symbolic", valign=Gtk.Align.CENTER, css_classes=["flat"],
+                            tooltip_text=_("Choose a Key File"))
         browse.connect("clicked", lambda *_: self.choose_key())
-        key_row.add_suffix(browse)
-        self.rows["key"] = key_row
-        options = Adw.EntryRow(title=_("Other ssh Options (e.g. -J jumphost)"), text=values.get("options") or "")
-        self.rows["options"] = options
-        advanced.add(key_row)
-        advanced.add(options)
-        advanced.set_description(_("Passwords are not stored: use a key (ssh-copy-id) or your ssh agent."))
+        self.key.add_suffix(browse)
+        self.options = Adw.EntryRow(title=_("Other ssh Options (e.g. -J jumphost)"), text=values.get("options") or "")
+        advanced.add_row(self.key)
+        advanced.add_row(self.options)
+        more.add(advanced)
+        more.set_description(_("Passwords are not stored: use a key (ssh-copy-id) or your ssh agent."))
 
         self.save_button = Gtk.Button(label=_("Save"), css_classes=["suggested-action"])
         self.save_button.connect("clicked", lambda *_: self.save())
@@ -305,20 +456,20 @@ class HostDialog(Adw.Dialog):
 
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18, margin_top=12, margin_bottom=18,
                       margin_start=18, margin_end=18)
-        box.append(group)
-        box.append(advanced)
+        box.append(main)
+        box.append(more)
         view = Adw.ToolbarView(content=box)
         view.add_top_bar(header)
         self.set_child(view)
-        self.set_default_widget(self.save_button)
+        self.set_focus(self.address)
         self.validate()
 
-    def value(self, key):
-        return self.rows[key].get_text().strip()
+    def parsed(self):
+        return parse_address(self.address.get_text())
 
     def validate(self):
-        port = self.value("port")
-        ok = bool(self.value("host")) and (not port or (port.isdigit() and 0 < int(port) < 65536))
+        user, host, port = self.parsed()
+        ok = bool(host) and " " not in host and (not port or (port.isdigit() and 0 < int(port) < 65536))
         self.save_button.set_sensitive(ok)
         return ok
 
@@ -326,7 +477,6 @@ class HostDialog(Adw.Dialog):
         dialog = Gtk.FileDialog(title=_("Choose a Key File"))
         folder = os.path.expanduser("~/.ssh")
         if os.path.isdir(folder):
-            from gi.repository import Gio
             dialog.set_initial_folder(Gio.File.new_for_path(folder))
 
         def done(dialog, result):
@@ -337,14 +487,16 @@ class HostDialog(Adw.Dialog):
             home = GLib.get_home_dir()
             if path.startswith(home + os.sep):
                 path = "~" + path[len(home):]
-            self.rows["key"].set_text(path)
+            self.key.set_text(path)
 
         dialog.open(self.get_root(), None, done)
 
     def save(self):
         if not self.validate():
             return
-        new = {key: self.value(key) for key in FIELDS}
-        new["name"] = new["name"] or address_of(new)
+        user, host, port = self.parsed()
+        new = {"host": host, "user": user, "port": port, "key": self.key.get_text().strip(),
+               "group": self.group.get_text().strip(), "options": self.options.get_text().strip()}
+        new["name"] = self.name.get_text().strip() or address_of(new)
         self.hosts.put(self.entry, new)
         self.close()

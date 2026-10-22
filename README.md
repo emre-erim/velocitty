@@ -33,15 +33,20 @@ terminal opens in the folder of the one it was split from.
 
 ### SSH address book (from deepin-terminal)
 
-`Ctrl+Shift+R`, the server button in the headerbar, or "SSH Hosts" in the main menu.
+Click the server button next to "New Tab" (or `Ctrl+Shift+R`): a panel opens on the right, and the
+terminals stay in view.
 
-- Save hosts with a name, user, port, key file, group and extra ssh options (`-J jumphost`...).
-  They are kept in `~/.local/state/velocitty/ssh.json`, readable by you only. Passwords are not
-  stored: use keys or your ssh agent.
-- The hosts of `~/.ssh/config` (and the files it includes) are listed too, and can be saved with +.
-- Type to search, Enter connects. Type `user@host` (or anything ssh understands) and press Enter
-  to connect to a host that isn't listed.
-- Each host opens in a new tab named after it. When ssh ends, the tab stays, so errors can be read.
+- **Click a server to connect.** It opens in a new tab named after it. When ssh ends the tab stays,
+  so errors can be read.
+- **Type to search.** Anything that isn't in the list (`root@1.2.3.4`, `host -p 2222`) shows up as
+  "Connect to …" at the top: press Enter.
+- **⋮ or right-click** a server for more: connect in a split, copy the ssh command, edit, remove.
+- **Add Server** at the bottom: an address like `user@host:port` and an optional name are enough.
+  Key file, jump host and other ssh options are under "Advanced".
+- The hosts of `~/.ssh/config` (and the files it includes) are listed too; "Save to the Address Book"
+  in their ⋮ menu copies them.
+- Saved in `~/.local/state/velocitty/ssh.json`, readable by you only. Passwords are not stored: use
+  keys or your ssh agent. `Esc` closes the panel.
 
 ### Vertical tabs (from deepin-terminal)
 

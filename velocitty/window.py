@@ -13,7 +13,7 @@ from velocitty.custom_tabs_page import CustomTabsPage
 from velocitty.customize import CustomizePopover
 from velocitty.palette import CUSTOM_CLASSES, STATES
 from velocitty.split import SplitTab, focus_later, split_of
-from velocitty.ssh import SshPage
+from velocitty.ssh import SshPanel
 from velocitty.vtabs import SIDEBAR_WIDTH, TabSidebar
 from velocitty.tab import TermTab
 
@@ -73,8 +73,10 @@ class TermWindow(Adw.ApplicationWindow):
         self.custom_tabs_button = Gtk.Button(icon_name="xsi-user-bookmarks-symbolic", tooltip_text=_("Custom Tabs"),
                                              action_name="win.custom-tabs", visible=False)
         self.header.pack_start(self.custom_tabs_button)
-        self.header.pack_start(Gtk.Button(icon_name="network-server-symbolic", tooltip_text=_("SSH Hosts"),
-                                          action_name="win.ssh-hosts"))
+        self.ssh_button = Gtk.ToggleButton(icon_name="network-server-symbolic",
+                                           tooltip_text=_("SSH Servers") + " (Ctrl+Shift+R)")
+        self.ssh_button.connect("toggled", lambda b: self.show_ssh_panel(b.get_active()))
+        self.header.pack_start(self.ssh_button)
 
         # Shown in full screen only, in place of the window buttons, to leave it
         self.unfullscreen_button = Gtk.Button(icon_name="xsi-view-restore-symbolic", action_name="win.fullscreen",
@@ -101,7 +103,7 @@ class TermWindow(Adw.ApplicationWindow):
         section.append(_("Split Down"), "win.split-down")
         menu.append_section(None, section)
         section = Gio.Menu()
-        section.append(_("SSH Hosts"), "win.ssh-hosts")
+        section.append(_("SSH Servers"), "win.ssh-hosts")
         section.append(_("Vertical Tabs"), "win.vertical-tabs")
         menu.append_section(None, section)
         section = Gio.Menu()
@@ -129,7 +131,12 @@ class TermWindow(Adw.ApplicationWindow):
         self.body = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL, start_child=self.sidebar,
                               end_child=self.tab_view, resize_start_child=False, shrink_start_child=False,
                               position=SIDEBAR_WIDTH, css_classes=["vtabs-paned"])
-        self.toolbar = Adw.ToolbarView(content=self.body)
+        # The SSH servers, in a panel on the right that leaves the terminals in view
+        self.ssh_panel = SshPanel(self)
+        self.ssh_split = Adw.OverlaySplitView(content=self.body, sidebar=self.ssh_panel, show_sidebar=False,
+                                              sidebar_position=Gtk.PackType.END, min_sidebar_width=260,
+                                              max_sidebar_width=380, sidebar_width_fraction=0.28)
+        self.toolbar = Adw.ToolbarView(content=self.ssh_split)
         self.toolbar.add_top_bar(self.header)
         self.toolbar.add_top_bar(self.tab_bar)
         self.overview.set_child(self.toolbar)
@@ -142,7 +149,6 @@ class TermWindow(Adw.ApplicationWindow):
         self.nav = Adw.NavigationView(pop_on_escape=True)
         self.nav.add(Adw.NavigationPage(child=self.overview, title=_("Terminal"), tag="terminal"))
         self.custom_tabs_page = CustomTabsPage(self)
-        self.ssh_page = SshPage(self)
         self.nav.connect("popped", lambda *_: self.focus_terminal())
         self.set_content(self.nav)
         self.custom_tabs_handler = self.app.custom_tabs.connect("changed", lambda *_: self.on_custom_tabs_changed())
@@ -240,23 +246,34 @@ class TermWindow(Adw.ApplicationWindow):
             self.nav.push(self.custom_tabs_page)
 
     def show_ssh_hosts(self):
-        if self.nav.get_visible_page() is self.ssh_page:
-            self.nav.pop()
-            return
-        self.overview.set_open(False)
-        if self.nav.get_visible_page() is not self.nav.find_page("terminal"):
-            self.nav.pop()
-        self.nav.push(self.ssh_page)
+        self.show_ssh_panel(not self.ssh_split.get_show_sidebar())
 
-    def open_ssh(self, title, command):
-        """A new tab that connects: the shell runs the ssh command, and stays when it ends,
-        so a failed connection can be read."""
-        if self.nav.get_visible_page() is not self.nav.find_page("terminal"):
-            self.nav.pop()
-        page = self.new_tab(restore={"run": command, "title": title})
-        tab = page.get_child().active
-        tab.run_command = None   # it is not saved with the tab
-        return page
+    def show_ssh_panel(self, show):
+        if show:
+            self.overview.set_open(False)
+            if self.nav.get_visible_page() is not self.nav.find_page("terminal"):
+                self.nav.pop()
+        if self.ssh_button.get_active() != show:
+            self.ssh_button.set_active(show)   # comes back here through "toggled"
+            return
+        if self.ssh_split.get_show_sidebar() != show:
+            self.ssh_split.set_show_sidebar(show)
+        if show:
+            self.ssh_panel.opened()
+        else:
+            GLib.idle_add(self.focus_terminal)
+
+    def open_ssh(self, title, command, split=False):
+        """Connect in a new tab, or in a split of the current terminal. The shell runs the ssh
+        command and stays when it ends, so a failed connection can be read."""
+        restore = {"run": command, "title": title}
+        if split and self.current_tab() is not None:
+            tab = self.split(Gtk.Orientation.HORIZONTAL, restore=restore)
+        else:
+            tab = self.new_tab(restore=restore).get_child().active
+        if tab is not None:
+            tab.run_command = None   # it is not saved with the tab
+        return tab
 
     def set_startup(self, tab, startup):
         tab.startup = startup
@@ -401,15 +418,18 @@ class TermWindow(Adw.ApplicationWindow):
             return None
         return self.tab_view.get_page(split)
 
-    def split(self, orientation):
+    def split(self, orientation, restore=None):
         tab = self.current_tab()
         split = split_of(tab)
         if split is None:
-            return
-        new = TermTab(self, self.app.settings, None, tab.current_directory() or tab.last_cwd)
+            return None
+        new = TermTab(self, self.app.settings, None, tab.current_directory() or tab.last_cwd, restore)
         new.apply_colors(self.app.scheme())
         split.split(tab, new, orientation)
+        if restore:
+            new.update_title()
         focus_later(new)
+        return new
 
     def remove_pane(self, tab):
         split = split_of(tab)

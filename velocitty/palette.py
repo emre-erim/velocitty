@@ -268,6 +268,17 @@ window.terminal .vtabs-list row.vtab .vtab-close { min-width: 22px; min-height: 
 window.terminal .vtabs-list row.vtab .vtab-attention { min-width: 6px; min-height: 6px; border-radius: 3px;
     background-color: @accent_bg_color; }
 window.terminal .vtabs button { color: $tf; }
+/* the SSH panel */
+window.terminal .ssh-panel { background-color: $tb; color: $tf; }
+window.terminal .ssh-list { background-color: transparent; color: $tf; padding: 0 6px 6px 6px; }
+window.terminal .ssh-list row.ssh-host { border-radius: 8px; margin: 1px 0; }
+window.terminal .ssh-list row.ssh-host:hover, window.terminal .ssh-list row.ssh-host:focus-visible {
+    background-color: alpha($tf, 0.10); }
+window.terminal .ssh-list row.ssh-quick { background-color: alpha($tf, 0.07); margin-top: 4px; }
+window.terminal .ssh-list .ssh-group { opacity: 0.6; }
+window.terminal .ssh-host-name { font-weight: 600; }
+window.terminal .ssh-connect-hint { opacity: 0.75; margin-end: 2px; }
+window.terminal .ssh-panel statuspage { background-color: transparent; color: $tf; }
 row.drop { box-shadow: 0 -2px 0 0 @accent_bg_color; }
 """)
 
