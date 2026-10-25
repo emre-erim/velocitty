@@ -11,6 +11,13 @@ install_data(
   install_dir: join_paths(get_option('datadir'), 'icons', 'hicolor', 'scalable', 'apps'),
 )
 
+# The same icon under the application id, the name desktops look for to match windows
+install_data(
+  'velocitty.svg',
+  rename: 'org.x.velocitty.svg',
+  install_dir: join_paths(get_option('datadir'), 'icons', 'hicolor', 'scalable', 'apps'),
+)
+
 install_data(
   'palettes/01-Amber.palette',
   'palettes/01-Cyan.palette',

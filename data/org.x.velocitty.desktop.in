@@ -1,13 +1,13 @@
 [Desktop Entry]
-Name=Terminal
-GenericName=Terminal Emulator
-Comment=Use the command line
+Name=Velocitty
+GenericName=Terminal
+Comment=Terminal with splits, themes and an SSH address book (Emre Edition)
 Exec=velocitty
-Icon=velocitty
+Icon=org.x.velocitty
 Terminal=false
 Type=Application
 Categories=System;TerminalEmulator;
-Keywords=terminal;command;prompt;shell;console;ssh;
+Keywords=velocitty;terminal;command;prompt;shell;console;ssh;
 StartupWMClass=org.x.velocitty
 StartupNotify=true
 X-ExecArg=--

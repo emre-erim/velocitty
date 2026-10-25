@@ -64,6 +64,9 @@ class TermApp(Adw.Application):
         GLib.set_prgname(APP_ID)   # parsed: the windows are made from here on
         Adw.Application.do_startup(self)
         install_fallback_icons(Gdk.Display.get_default())
+        # The windows' own icon: X11 panels and window lists (MATE, Xfce...) show this one
+        theme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default())
+        Gtk.Window.set_default_icon_name(APP_ID if theme.has_icon(APP_ID) else "velocitty")
         Gtk.StyleContext.add_provider_for_display(
             Gdk.Display.get_default(), self.provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         Adw.StyleManager.get_default().connect("notify::dark", lambda *_: self.apply_scheme())
