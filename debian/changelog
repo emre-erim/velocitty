@@ -1,3 +1,12 @@
+velocitty (1.0.3+emre12) resolute; urgency=medium
+
+  * The menu entry is called Velocitty (Terminal under it), and can be
+    found by searching for velocitty
+  * The windows have the Velocitty icon, so X11 panels (MATE, Xfce) and
+    window lists show it; the icon is also installed as org.x.velocitty
+
+ -- Emre <emre.erim@gmail.com>  Sun, 25 Oct 2026 21:16:02 -0000
+
 velocitty (1.0.3+emre11) resolute; urgency=medium
 
   * Without xapp-symbolic-icons, the stand-in icons are colored like the
