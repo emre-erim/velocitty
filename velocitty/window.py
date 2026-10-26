@@ -50,9 +50,12 @@ class TermWindow(Adw.ApplicationWindow):
 
         self.tab_view = Adw.TabView()
         # No shortcuts to go to or move a tab to the first or last position
-        self.tab_view.set_shortcuts(Adw.TabViewShortcuts.ALL_SHORTCUTS & ~(
-            Adw.TabViewShortcuts.CONTROL_HOME | Adw.TabViewShortcuts.CONTROL_END
-            | Adw.TabViewShortcuts.CONTROL_SHIFT_HOME | Adw.TabViewShortcuts.CONTROL_SHIFT_END))
+        shortcuts = Adw.TabViewShortcuts
+        self.tab_view.set_shortcuts(
+            shortcuts.CONTROL_TAB | shortcuts.CONTROL_SHIFT_TAB
+            | shortcuts.CONTROL_PAGE_UP | shortcuts.CONTROL_PAGE_DOWN
+            | shortcuts.CONTROL_SHIFT_PAGE_UP | shortcuts.CONTROL_SHIFT_PAGE_DOWN
+            | shortcuts.ALT_DIGITS | shortcuts.ALT_ZERO)
         self.selected_page = None   # the tab in front, and the one that was in front before it
         self.previous_page = None
         self.tab_view.connect("notify::selected-page", self.on_page_selected)
