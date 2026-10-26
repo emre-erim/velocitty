@@ -1,3 +1,11 @@
+velocitty (1.0.4) adrien; urgency=medium
+
+  * window: Fix startup crash with older PyGObject.
+  * application: Add a setting for where a new terminal opens.
+  * l10n: Update POT
+
+ -- Clement Lefebvre <root@linuxmint.com>  Mon, 26 Oct 2026 14:46:38 +0000
+
 velocitty (1.0.3) adrien; urgency=medium
 
   [ Michael Webster ]
