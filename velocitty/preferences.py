@@ -117,6 +117,8 @@ class Preferences(Adw.Window):
         group = Adw.PreferencesGroup(title=_("Windows"))
         group.add(spin_row(settings, "default-columns", _("Columns"), 20, 400))
         group.add(spin_row(settings, "default-rows", _("Rows"), 5, 200))
+        group.add(choice_row(settings, "launch-action", _("New Terminal Opens"), [
+            ("tab", _("In a Tab")), ("window", _("In a Window"))]))
         page.add(group)
 
         group = Adw.PreferencesGroup(title=_("Tabs"))

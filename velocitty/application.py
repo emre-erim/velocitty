@@ -207,7 +207,12 @@ class TermApp(Adw.Application):
         tab = None
         if "new-window" in options or front is None:
             tab = self.new_window(command, cwd).current_tab()
-        elif command or title or "tab" in options:
+        elif "tab" in options:
+            tab = front.new_tab(command, cwd, at_end=True).get_child()
+            front.present()
+        elif startup_window is None and self.settings.get_string("launch-action") == "window":
+            tab = self.new_window(command, cwd).current_tab()
+        elif command or title:
             tab = front.new_tab(command, cwd, at_end=True).get_child()
             front.present()
         elif startup_window is not None and "working-directory" not in options and (
