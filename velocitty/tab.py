@@ -73,7 +73,6 @@ class TermTab(Gtk.Overlay):
         self.apply_settings()
         self.setup_size_overlay()
         self.search_bar = SearchBar(self.terminal, settings)
-        self.search_bar.connect("closed", self.on_search_closed)
         self.content.append(self.search_bar)
 
         self.terminal.connect("child-exited", self.on_child_exited)
@@ -148,8 +147,6 @@ class TermTab(Gtk.Overlay):
         zoom = s.get_double("zoom")
         if zoom != self.terminal.get_font_scale():
             self.terminal.set_font_scale(zoom)
-            # The columns and rows change with the zoom, that is not a resize to show
-            self.quiet_until = GLib.get_monotonic_time() + 500000
 
     def font_name(self):
         if not self.settings.get_boolean("use-system-font"):
@@ -189,26 +186,28 @@ class TermTab(Gtk.Overlay):
         self.add_overlay(self.size_revealer)
         self.terminal.connect("bell", self.on_bell)
         self.last_size = None
-        self.first_tick = None
-        self.quiet_until = 0
+        self.created = GLib.get_monotonic_time()
         self.size_hide_source = 0
-        # Called on every frame while the tab is on screen
-        self.terminal.add_tick_callback(self.on_tick)
+        self.size_check_ticks = 0
 
-    def on_tick(self, widget, clock):
+    def window_resized(self):
+        """The window changed size. The terminal takes its new columns and rows when the next frames
+        are laid out, so wait two of them. There is no callback running when nothing is resized."""
+        if not self.size_check_ticks:
+            self.size_check_ticks = 2
+            self.terminal.add_tick_callback(self.check_size)
+
+    def check_size(self, widget, clock):
+        self.size_check_ticks -= 1
+        if self.size_check_ticks:
+            return GLib.SOURCE_CONTINUE
         size = (self.terminal.get_column_count(), self.terminal.get_row_count())
-        now = GLib.get_monotonic_time()
-        if self.first_tick is None:
-            self.first_tick = now
         if size != self.last_size:
             self.last_size = size
             # The window settles to its size right after it appears, only show real resizes
-            if now - self.first_tick < SETTLE_USEC:
-                return GLib.SOURCE_CONTINUE
-            if now < self.quiet_until:
-                return GLib.SOURCE_CONTINUE
-            self.show_indicator("%d \u00d7 %d" % size)
-        return GLib.SOURCE_CONTINUE
+            if GLib.get_monotonic_time() - self.created >= SETTLE_USEC:
+                self.show_indicator("%d \u00d7 %d" % size)
+        return GLib.SOURCE_REMOVE
 
     def show_indicator(self, text):
         """Show a short text, the size or the zoom, in the corner for a moment."""
@@ -415,11 +414,7 @@ class TermTab(Gtk.Overlay):
     # -- search ------------------------------------------------------------
 
     def show_search(self):
-        self.quiet_until = GLib.get_monotonic_time() + 500000   # the terminal changes size, not a resize to show
         self.search_bar.open()
-
-    def on_search_closed(self, bar):
-        self.quiet_until = GLib.get_monotonic_time() + 500000
 
     # -- actions and context menu ------------------------------------------
 

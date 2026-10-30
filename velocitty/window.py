@@ -159,6 +159,7 @@ class TermWindow(Adw.ApplicationWindow):
             self.add_action(action)
 
         self.connect("map", lambda *_: GLib.idle_add(self.focus_terminal))
+        self.connect("realize", self.on_realize)
         self.connect("close-request", self.on_close_request)
 
     # -- tabs --------------------------------------------------------------
@@ -187,6 +188,17 @@ class TermWindow(Adw.ApplicationWindow):
     def on_create_window(self, view):
         """A tab was dragged out of the bar: it gets a window of its own."""
         return self.app.empty_window().tab_view
+
+    def on_realize(self, window):
+        # Only a change of the window's size makes the terminal show its columns and rows
+        surface = self.get_surface()
+        for size in ("width", "height"):
+            surface.connect("notify::" + size, lambda *_: self.size_changed())
+
+    def size_changed(self):
+        tab = self.current_tab()
+        if tab is not None:
+            tab.window_resized()
 
     def on_tab_right_click(self, gesture, n_press, x, y, host):
         widget = host.pick(x, y, Gtk.PickFlags.DEFAULT)
