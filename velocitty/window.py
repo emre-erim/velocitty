@@ -53,9 +53,12 @@ class TermWindow(Adw.ApplicationWindow):
 
         self.tab_view = Adw.TabView()
         # No shortcuts to go to or move a tab to the first or last position
-        self.tab_view.set_shortcuts(Adw.TabViewShortcuts.ALL_SHORTCUTS & ~(
-            Adw.TabViewShortcuts.CONTROL_HOME | Adw.TabViewShortcuts.CONTROL_END
-            | Adw.TabViewShortcuts.CONTROL_SHIFT_HOME | Adw.TabViewShortcuts.CONTROL_SHIFT_END))
+        shortcuts = Adw.TabViewShortcuts
+        self.tab_view.set_shortcuts(
+            shortcuts.CONTROL_TAB | shortcuts.CONTROL_SHIFT_TAB
+            | shortcuts.CONTROL_PAGE_UP | shortcuts.CONTROL_PAGE_DOWN
+            | shortcuts.CONTROL_SHIFT_PAGE_UP | shortcuts.CONTROL_SHIFT_PAGE_DOWN
+            | shortcuts.ALT_DIGITS | shortcuts.ALT_ZERO)
         self.selected_page = None   # the tab in front, and the one that was in front before it
         self.previous_page = None
         self.tab_view.connect("notify::selected-page", self.on_page_selected)
@@ -195,6 +198,7 @@ class TermWindow(Adw.ApplicationWindow):
         self.apply_tab_layout()
 
         self.connect("map", lambda *_: GLib.idle_add(self.focus_terminal))
+        self.connect("realize", self.on_realize)
         self.connect("close-request", self.on_close_request)
 
     # -- tabs --------------------------------------------------------------
@@ -223,6 +227,18 @@ class TermWindow(Adw.ApplicationWindow):
     def on_create_window(self, view):
         """A tab was dragged out of the bar: it gets a window of its own."""
         return self.app.empty_window().tab_view
+
+    def on_realize(self, window):
+        # Only a change of the window's size makes the terminal show its columns and rows
+        surface = self.get_surface()
+        for size in ("width", "height"):
+            surface.connect("notify::" + size, lambda *_: self.size_changed())
+
+    def size_changed(self):
+        page = self.tab_view.get_selected_page()
+        if page is not None:
+            for tab in page.get_child().panes():
+                tab.window_resized()
 
     def on_tab_right_click(self, gesture, n_press, x, y, host):
         widget = host.pick(x, y, Gtk.PickFlags.DEFAULT)
@@ -257,10 +273,6 @@ class TermWindow(Adw.ApplicationWindow):
             self.ssh_button.set_active(show)   # comes back here through "toggled"
             return
         if self.ssh_split.get_show_sidebar() != show:
-            # The terminals get narrower or wider: that is not a resize to show
-            quiet = GLib.get_monotonic_time() + 800000
-            for tab in self.tabs():
-                tab.quiet_until = max(tab.quiet_until, quiet)
             self.ssh_split.set_show_sidebar(show)
         if show:
             self.ssh_panel.opened()
@@ -512,10 +524,6 @@ class TermWindow(Adw.ApplicationWindow):
         if not hasattr(self, "rail"):
             return   # a setting changed while the window is being made: it is applied at the end
         vertical = self.app.settings.get_boolean("vertical-tabs")
-        if self.rail.get_visible() != vertical:
-            quiet = GLib.get_monotonic_time() + 500000   # the terminals change size, not a resize to show
-            for tab in self.tabs():
-                tab.quiet_until = max(tab.quiet_until, quiet)
         self.rail.set_visible(vertical)
         self.tab_bar.set_visible(not vertical)
         self.queue_restyle()

@@ -2,7 +2,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Vte", "3.91")
-from gi.repository import Gdk, Gio, GLib, GObject, Gtk, Vte
+from gi.repository import Gdk, Gio, GLib, Gtk, Vte
 from velocitty.i18n import l10n
 
 from velocitty import GETTEXT_DOMAIN
@@ -16,8 +16,6 @@ PCRE2_MULTILINE = 0x00000400
 class SearchBar(Gtk.Revealer):
     """A bar below a terminal to search its output and its scrollback. The terminal stays
     usable while it is open. The options are saved in the settings, so all the bars share them."""
-
-    __gsignals__ = {"closed": (GObject.SignalFlags.RUN_LAST, None, ())}
 
     def __init__(self, terminal, settings):
         super().__init__(visible=False, transition_type=Gtk.RevealerTransitionType.SLIDE_UP)
@@ -86,7 +84,6 @@ class SearchBar(Gtk.Revealer):
         self.terminal.search_set_regex(None, 0)
         self.terminal.unselect_all()
         self.terminal.grab_focus()
-        self.emit("closed")
 
     def on_key_pressed(self, controller, keyval, keycode, state):
         # Shift+Enter goes the other way

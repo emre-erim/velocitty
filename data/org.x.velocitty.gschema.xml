@@ -16,6 +16,15 @@
       <summary>Style</summary>
       <description>Use the light or the dark variant of the palette, or follow the system.</description>
     </key>
+    <key name="launch-action" type="s">
+      <choices>
+        <choice value="tab"/>
+        <choice value="window"/>
+      </choices>
+      <default>'tab'</default>
+      <summary>Where a new terminal opens</summary>
+      <description>What starting the terminal does when it is already running: open a tab in the window that is in front, or a new window. Starting it with --tab or --new-window always does that.</description>
+    </key>
     <key name="tab-folders" type="i">
       <range min="0" max="3"/>
       <default>1</default>

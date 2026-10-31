@@ -1,3 +1,21 @@
+velocitty (1.0.4+emre1) resolute; urgency=medium
+
+  * Merge Velocitty 1.0.4:
+    - The size indicator is only computed during resizes, no more constant
+      CPU usage
+    - Preferences: "New Terminal Opens" in a tab or in a window
+    - Fix a startup crash with older PyGObject (LMDE 7, Mint 22.3)
+
+ -- Emre <emre.erim@gmail.com>  Sat, 31 Oct 2026 12:00:00 -0000
+
+velocitty (1.0.4) adrien; urgency=medium
+
+  * window: Fix startup crash with older PyGObject.
+  * application: Add a setting for where a new terminal opens.
+  * l10n: Update POT
+
+ -- Clement Lefebvre <root@linuxmint.com>  Mon, 26 Oct 2026 14:46:38 +0000
+
 velocitty (1.0.3+emre12) resolute; urgency=medium
 
   * The menu entry is called Velocitty (Terminal under it), and can be
