@@ -141,6 +141,9 @@ All credit for Velocitty itself goes to the Linux Mint team. The original README
 
 Terminal emulator for Linux desktops.
 
+<img width="621" height="571" alt="image" src="https://github.com/user-attachments/assets/27595118-4033-4168-b1f0-c15fb9478d43" />
+
+
 ## Philosophy
 
 - Intuitive

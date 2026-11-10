@@ -1,3 +1,14 @@
+velocitty (1.0.7+emre1) resolute; urgency=medium
+
+  * Merge Velocitty 1.0.7:
+    - Links: Ctrl+click opens them, and the context menu offers them
+    - Highlights for remote/admin sessions in the preferences
+    - Path shortening in the headerbar, fixed for long home dirs
+    - The startup command is no longer shown with bash and fish, and the
+      shell startup files are no longer read twice
+
+ -- Emre <emre.erim@gmail.com>  Wed, 11 Nov 2026 12:00:00 -0000
+
 velocitty (1.0.4+emre1) resolute; urgency=medium
 
   * Merge Velocitty 1.0.4:
@@ -7,6 +18,33 @@ velocitty (1.0.4+emre1) resolute; urgency=medium
     - Fix a startup crash with older PyGObject (LMDE 7, Mint 22.3)
 
  -- Emre <emre.erim@gmail.com>  Sat, 31 Oct 2026 12:00:00 -0000
+
+velocitty (1.0.7) adrien; urgency=medium
+
+  * Add highlights for remote/admin sessions in the prefs
+  * l10n: Update POT
+
+ -- Clement Lefebvre <root@linuxmint.com>  Thu, 05 Nov 2026 15:39:41 +0000
+
+velocitty (1.0.6) adrien; urgency=medium
+
+  * Add support for links
+  * l10n: Update POT
+
+ -- Clement Lefebvre <root@linuxmint.com>  Thu, 05 Nov 2026 12:41:51 +0000
+
+velocitty (1.0.5) adrien; urgency=medium
+
+  * Only calculate the size indicator during resizing
+  * Update README
+  * shell: Fix path shortening for long home dirs
+  * window: Add path shortening to headerbar
+  * tab: Don't read the shell startup files twice
+  * tab: Don't show the startup command when using fish
+  * tab: Don't show the startup command when using bash
+  * l10n: Update POT
+
+ -- Clement Lefebvre <root@linuxmint.com>  Thu, 05 Nov 2026 12:03:22 +0000
 
 velocitty (1.0.4) adrien; urgency=medium
 

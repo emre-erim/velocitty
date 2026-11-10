@@ -122,6 +122,9 @@ class Preferences(Adw.Window):
         group.add(spin_row(settings, "default-rows", _("Rows"), 5, 200))
         group.add(choice_row(settings, "launch-action", _("New Terminal Opens"), [
             ("tab", _("In a Tab")), ("window", _("In a Window"))]))
+        group.add(choice_row(settings, "window-folders", _("Shorten Paths"), [
+            (0, _("Don't Shorten")), (1, _("Last Folder")), (2, _("Last Two Folders")),
+            (3, _("Last Three Folders"))]))
         page.add(group)
 
         group = Adw.PreferencesGroup(title=_("Tabs"))
@@ -132,6 +135,8 @@ class Preferences(Adw.Window):
                              _("Numbered squares on the left instead of the tab bar")))
         group.add(switch_row(settings, "highlight-running", _("Highlight Running Commands"),
                              _("Color the tab and the headerbar while a command is running")))
+        group.add(switch_row(settings, "highlight-sessions", _("Highlight Remote and Admin Sessions"),
+                             _("Color the tab and the headerbar for remote and admin sessions")))
         group.add(switch_row(settings, "visual-bell", _("Visual Bell"),
                              _("Flash the headerbar when a program rings the bell")))
         page.add(group)

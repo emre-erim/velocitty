@@ -2,6 +2,7 @@ import os
 import shlex
 import signal
 import socket
+import tempfile
 
 import gi
 
@@ -18,6 +19,13 @@ from velocitty.shell import classify, shorten_path, strip_local_host, untrim_pat
 _ = l10n(GETTEXT_DOMAIN)
 
 MAX_LAST_OUTPUT_ROWS = 10000
+FIRST_PROMPT_WAIT = 2000   # milliseconds a shell that gives no prompt signal is waited for
+PROMPT_SETTLE = 60   # milliseconds after the signal for the prompt to be drawn
+# Links are found in the text, or given by the program (OSC 8). Only these kinds are opened.
+LINK_PATTERN = r"(?:(?:https?|ftp)://|www\.|mailto:)[^\s<>\"'`{}|\\^\[\]]+[^\s<>\"'`{}|\\^\[\].,;:!?)]"
+LINK_SCHEMES = ("http", "https", "ftp", "mailto")
+PCRE2_CASELESS = 0x00000008
+PCRE2_MULTILINE = 0x00000400
 ORPHAN_POLLS = 120   # half a second each: a minute without a window
 SETTLE_USEC = 700000
 ZOOM_LEVELS = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 4.0]
@@ -53,7 +61,7 @@ class TermTab(Gtk.Overlay):
         self.auto_title = _("Terminal")
         self.kind = "idle"
         self.command_line = ""
-        self.title = self.full_title = _("Terminal")   # in the tab bar, and in full
+        self.title = self.window_title = _("Terminal")   # in the tab bar, and in the headerbar
         self.shell_pid = None
         self.last_output = None
         self.prompt_row = None
@@ -99,8 +107,18 @@ class TermTab(Gtk.Overlay):
         click = Gtk.GestureClick(button=3)
         click.connect("pressed", self.on_context_menu)
         self.terminal.add_controller(click)
+        # Ctrl+click opens a link. This is in the capture phase so that it comes before the
+        # terminal starts a selection.
+        link_click = Gtk.GestureClick(button=1, propagation_phase=Gtk.PropagationPhase.CAPTURE)
+        link_click.connect("pressed", self.on_link_click)
+        self.terminal.add_controller(link_click)
+        self.terminal.set_allow_hyperlink(True)
+        regex = Vte.Regex.new_for_match(LINK_PATTERN, -1, PCRE2_MULTILINE | PCRE2_CASELESS)
+        self.terminal.match_set_cursor_name(self.terminal.match_add_regex(regex, 0), "pointer")
+        self.link = None   # the link under the pointer when the context menu was opened
         self.setup_actions()
 
+        self.pending_command = self.startup_command()
         env = ["%s=%s" % item for item in os.environ.items() if item[0] not in ("TERM", "PROMPT_DIRTRIM")]
         env += ["TERM=xterm-256color", "COLORTERM=truecolor",
                 "PROMPT_DIRTRIM=%d" % self.settings.get_int("prompt-folders")]
@@ -118,13 +136,26 @@ class TermTab(Gtk.Overlay):
         shell = self.settings.get_string("shell")
         if not shell or not os.access(shell, os.X_OK):
             shell = os.environ.get("SHELL", "/bin/bash")
-        # The command to run at start doesn't apply when the tab was asked to run a specific command
-        startup = self.run_command or self.settings.get_string("startup-command").strip()
-        if startup and (self.run_command or self.runs_startup):
-            # Run it in an interactive shell (so aliases and the usual setup are there), then
-            # replace that shell with a normal one: no prompt is shown for the command.
-            return [shell, "-i", "-c", "%s\n exec %s" % (startup, shlex.quote(shell))]
+        if self.pending_command and os.path.basename(shell) == "fish":
+            startup, self.pending_command = self.pending_command, ""
+            return [shell, "--init-command", startup]
+        if self.pending_command and os.path.basename(shell) == "bash":
+            startup, self.pending_command = self.pending_command, ""
+            handle, path = tempfile.mkstemp(prefix="velocitty-", suffix=".rc", dir=GLib.get_user_runtime_dir())
+            with os.fdopen(handle, "w") as rcfile:
+                rcfile.write("rm -f %s\n" % shlex.quote(path))
+                rcfile.write("[ -f ~/.bashrc ] && . ~/.bashrc\n")
+                rcfile.write(startup + "\n")
+            return [shell, "--rcfile", path, "-i"]
         return [shell]
+
+    def startup_command(self):
+        """What is typed in the shell when it starts: the command of a saved tab, else the startup
+        command of the settings. That one doesn't apply to restored tabs, nor to a tab asked to run
+        a specific command."""
+        if self.run_command:
+            return self.run_command
+        return self.settings.get_string("startup-command").strip() if self.runs_startup else ""
 
     # -- settings and colors -----------------------------------------------
 
@@ -294,6 +325,16 @@ class TermTab(Gtk.Overlay):
 
     def on_spawned(self, terminal, pid, error):
         self.shell_pid = pid
+        # The shell starts once, so its startup files are read once. The command is typed when the
+        # first prompt is shown, or after a while for a shell that doesn't tell us
+        if self.pending_command and not error:
+            GLib.timeout_add(FIRST_PROMPT_WAIT, self.type_pending_command)
+
+    def type_pending_command(self):
+        command, self.pending_command = self.pending_command, ""
+        if command and self.get_root() is not None:
+            self.terminal.feed_child((command + "\n").encode())
+        return GLib.SOURCE_REMOVE
 
     def on_key_pressed(self, controller, keyval, keycode, state):
         if keyval in (Gdk.KEY_Return, Gdk.KEY_KP_Enter):
@@ -338,26 +379,24 @@ class TermTab(Gtk.Overlay):
         of its session (ssh, admin)."""
         if self.custom_color:
             return "custom-" + self.custom_color
-        return self.kind if self.kind in ("remote", "admin") else None
+        if self.kind in ("remote", "admin") and self.settings.get_boolean("highlight-sessions"):
+            return self.kind
+        return None
 
     def is_running(self):
         """A program is running, and it is highlighted: a shade over the color of the tab."""
         return self.kind == "active" and self.settings.get_boolean("highlight-running")
 
     def update_title(self):
-        """The automatic title is in full in the tooltip and the headerbar; the tab shows a folder
+        """The automatic title is in full in the tooltip. The tab and the window show a folder
         shortened to its last folders, as many as the settings say."""
         shown = strip_local_host(self.terminal.get_window_title() or _("Terminal"))
         if self.kind in ("idle", "active"):
             shown = untrim_path(shown, self.shell_pid)
-        full = shown
-        short = shorten_path(shown, self.settings.get_int("tab-folders"))
-        if self.kind == "active" and self.command_line:
-            full += " — " + self.command_line
-            short += " — " + self.command_line
-        self.auto_title = full
-        self.title = self.custom_title or short
-        self.full_title = self.custom_title or full
+        suffix = " — " + self.command_line if self.kind == "active" and self.command_line else ""
+        self.auto_title = shown + suffix
+        self.title = self.custom_title or shorten_path(shown, self.settings.get_int("tab-folders")) + suffix
+        self.window_title = self.custom_title or shorten_path(shown, self.settings.get_int("window-folders")) + suffix
         self.window.title_changed(self)
 
     # -- drop and paste ----------------------------------------------------
@@ -390,6 +429,9 @@ class TermTab(Gtk.Overlay):
     def on_precmd(self, terminal, *args):
         """The shell is about to prompt: everything since the previous prompt
         is the last command and its output."""
+        if self.pending_command:
+            # Once the prompt is on screen, so that the terminal doesn't echo the command twice
+            GLib.timeout_add(PROMPT_SETTLE, self.type_pending_command)
         column, row = terminal.get_cursor_position()
         if self.prompt_row is not None and row - 1 >= self.prompt_row:
             start = max(self.prompt_row, row - MAX_LAST_OUTPUT_ROWS)
@@ -429,6 +471,7 @@ class TermTab(Gtk.Overlay):
             "select-all": lambda *_: self.terminal.select_all(),
             "find": lambda *_: self.show_search(),
             "menu": lambda *_: self.popup_menu_at_cursor(),
+            "open-link": lambda *_: self.open_link(self.link),
         }
         for name, handler in handlers.items():
             action = Gio.SimpleAction.new(name, None)
@@ -446,6 +489,8 @@ class TermTab(Gtk.Overlay):
                                                     Gtk.NamedAction.new("term." + name)))
         self.add_controller(shortcuts)
 
+        self.link_menu = Gio.Menu()
+        self.link_menu.append(_("Open Link"), "term.open-link")
         self.menu = Gio.Menu()
         section = Gio.Menu()
         section.append(_("New Tab"), "win.new-tab")
@@ -468,17 +513,54 @@ class TermTab(Gtk.Overlay):
 
     def on_context_menu(self, gesture, n_press, x, y):
         self.terminal.grab_focus()   # the menu works on this terminal of a split tab
+        self.link = self.link_at(x, y)
         self.popup_menu(x, y)
+
+    def link_at(self, x, y):
+        """The link, if any, under this point of the terminal. Only the kinds we open are returned."""
+        uri = self.terminal.check_hyperlink_at(x, y)
+        if not uri:
+            uri = self.terminal.check_match_at(x, y)[0]
+            if uri and uri.lower().startswith("www."):
+                uri = "http://" + uri
+        return uri if uri and uri.split(":", 1)[0].lower() in LINK_SCHEMES else None
+
+    def on_link_click(self, gesture, n_press, x, y):
+        if not gesture.get_current_event_state() & Gdk.ModifierType.CONTROL_MASK:
+            return
+        uri = self.link_at(x, y)
+        if uri:
+            gesture.set_state(Gtk.EventSequenceState.CLAIMED)
+            self.open_link(uri)
+
+    def open_link(self, uri):
+        if uri:
+            Gtk.UriLauncher.new(uri).launch(self.get_root(), None, self.on_link_opened)
+
+    def on_link_opened(self, launcher, result):
+        try:
+            launcher.launch_finish(result)
+        except GLib.Error:
+            pass   # nothing to open it, or cancelled
 
     def popup_menu_at_cursor(self):
         """Shift+F10 or the Menu key: open the menu at the text cursor."""
+        self.link = None
         column, row = self.terminal.get_cursor_position()
         height = self.terminal.get_char_height()
         self.popup_menu(TERMINAL_MARGIN + (column + 1) * self.terminal.get_char_width(),
                         TERMINAL_MARGIN + row * height, height)
 
+    def on_menu_closed(self, popover, has_link):
+        if has_link:
+            self.menu.remove(0)   # the link entries are only in the menu of a link
+        GLib.idle_add(popover.unparent)
+
     def popup_menu(self, x, y, height=1):
         self.actions.lookup_action("copy").set_enabled(self.terminal.get_has_selection())
+        has_link = self.link is not None
+        if has_link:
+            self.menu.insert_section(0, None, self.link_menu)
         popover = Gtk.PopoverMenu.new_from_model(self.menu)
         popover.set_parent(self)
         popover.set_has_arrow(False)
@@ -486,5 +568,5 @@ class TermTab(Gtk.Overlay):
         rect = Gdk.Rectangle()
         rect.x, rect.y, rect.width, rect.height = int(x), int(y), 1, int(height)
         popover.set_pointing_to(rect)
-        popover.connect("closed", lambda p: GLib.idle_add(p.unparent))
+        popover.connect("closed", self.on_menu_closed, has_link)
         popover.popup()
