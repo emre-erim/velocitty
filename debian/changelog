@@ -1,8 +1,9 @@
 velocitty (1.0.8+emre1) resolute; urgency=medium
 
   * Merge Velocitty 1.0.8:
-    - Starting the terminal when it is already running now opens a new
-      window by default instead of a tab (changeable in the preferences)
+    - Upstream now opens a new window by default when the terminal is
+      started while already running; this edition keeps opening a tab
+      (changeable in the preferences)
 
  -- Emre <emre.erim@gmail.com>  Sun, 15 Nov 2026 12:00:00 -0000
 
